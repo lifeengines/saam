@@ -73,9 +73,8 @@ enum AREA_PERMISSION {
 class Instruction {
     private:
         MNEMONIC mnemonic;
-        union
-        {
-            // B
+        union {
+            // Branch
             struct {
                 uint8_t cond;
                 uint32_t offset;
@@ -88,7 +87,7 @@ class Instruction {
                 uint8_t Rd;
                 uint16_t offset; 
             } single_data_transfer;
-        };
+        } operands;
         
     public:
 };
@@ -102,7 +101,6 @@ class Function {
     public:
         Function(string label);
         ~Function();
-
 };
 
 class Procedure {
