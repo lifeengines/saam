@@ -23,40 +23,19 @@
  *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- *  File name: instruction.cpp
+ *  File name: test_instructions.cpp
  *
- *  Description: Function definitions for Instruction class
- *  See individual description for more details.
+ *  Description: Test driver for Instruction class
  * 
  -----------------------------------------------------------------------*/
 
-#include "all.h"
+#include <assert.h>
+#include "../src/all.h"
 
-Instruction::Instruction(MNEMONIC m, uint32_t offset) {
-    mnemonic = m;
-    memOffset = offset;
-    tlInstructionPtr = NULL;
+using namespace std;
+
+int main() {
+    Instruction *a = new Instruction(AND, 0);
+    delete a;
+    return 0;
 }
-
-void Instruction::setCondition(uint8_t condition) {
-    cond = condition;
-}
-
-Instruction::~Instruction() {}
-
-void Instruction::dataProcessing(uint8_t rn, uint8_t rd, uint16_t operand2) {
-    body.dataProcessing.rn = rn;
-    body.dataProcessing.rd = rd;
-    body.dataProcessing.operand2 = operand2;
-}
-
-void Instruction::singleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset) {
-    body.singleDataTransfer.rn = rn;
-    body.singleDataTransfer.rd = rd;
-    body.singleDataTransfer.offset = offset;
-}
-
-void Instruction::branch(uint32_t offset) {
-    body.branch.offset = offset;
-}
-

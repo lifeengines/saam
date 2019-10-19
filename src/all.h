@@ -25,7 +25,7 @@
  * 
  *  File name: all.h
  *
- *  Description: Class definitions and constants for all source files. 
+ *  Description: Class declarations and constants for all source files. 
  *  See individual description for more details.
  * 
  -----------------------------------------------------------------------*/
@@ -36,8 +36,8 @@
 
 using namespace std;
 
-#ifndef _ALL_H
-#define _ALL_H
+#ifndef ALL_H_
+#define ALL_H_
 
 enum PARSER_STATE {
     INITIAL,
@@ -46,6 +46,7 @@ enum PARSER_STATE {
     PROCEDURE,
     FUNCTION,
     INSTRUCTION,
+    COMMENT,
     SUCCESS,
     SYNTAX_ERROR
 };
@@ -72,45 +73,64 @@ enum AREA_PERMISSION {
 
 class Instruction {
     private:
-        MNEMONIC mnemonic;
+        MNEMONIC        mnemonic;
+        uint32_t        memOffset;
+        Instruction*    tlInstructionPtr;
+
+        uint8_t         cond;
         union {
             // Branch
             struct {
-                uint8_t cond;
                 uint32_t offset;
             } branch;
-
+            // AND, SUB, ADD, MOV
+            struct {
+                uint8_t rn;
+                uint8_t rd;
+                uint16_t operand2;
+            } dataProcessing;
             // LDR, STR
             struct {
-                uint8_t cond;
-                uint8_t Rn;
-                uint8_t Rd;
+                uint8_t rn;
+                uint8_t rd;
                 uint16_t offset; 
-            } single_data_transfer;
-        } operands;
+            } singleDataTransfer;
+        } body;
         
     public:
+        Instruction(MNEMONIC m, uint32_t offset);
+        ~Instruction();
+        void setCondition(uint8_t cond);
+        void dataProcessing(uint8_t rn, uint8_t rd, uint16_t operand2);
+        void singleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset);
+        void branch(uint32_t offset);
 };
 
 class Function {
     private:
         string          label;
-        Instruction*    start_instruction;
-        Function*       tl_function;
-        uint32_t        mem_offset;
+        Instruction*    startInstruction;
+        Instruction*    lastInstruction;
+        Function*       tlFunctionPtr;
+        uint32_t        memOffset;
+    
     public:
         Function(string label);
         ~Function();
+        Instruction *appendInstruction(Instruction instruction);
+        void freeInstructions();
 };
 
 class Procedure {
     private:
-        string      label;
-        Function    functions [];
+        string          label;
+        Procedure*      tlProcedurePtr;
 
     public:
         Procedure(string label);
         ~Procedure();
+        Function *appendFunction(Function function);
+        void freeFunctions();
 };
 
 class Area {
@@ -118,7 +138,7 @@ class Area {
         string          name;
         AREA_TYPE       type;
         AREA_PERMISSION permission;
-        Procedure       procedures [];
+        Procedure*      startProcedurePtr;
 
     public:
         Area(string name, AREA_TYPE type, AREA_PERMISSION permission);
