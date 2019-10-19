@@ -46,9 +46,13 @@ RM          = rm -f
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 clean: 
-	rm -f src/*.o tests/*.o core* *~ saam
+	rm -f src/*.o tests/*.o core* *~ saam tests/test-*
 
 saam: src/main.o
 	$(CC) $(CFLAGS) -o saam src/main.o
 
 # Unit tests
+test-instructions: tests/test_instructions.o src/instruction.o
+	$(CC) $(CFLAGS) -o tests/test-instructions \
+					tests/test_instructions.o \
+					src/instruction.o
