@@ -33,11 +33,28 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 
 using namespace std;
 
 #ifndef ALL_H_
 #define ALL_H_
+
+const uint8_t COND_EQ = 0x00;
+const uint8_t COND_NE = 0x01;
+const uint8_t COND_CS = 0x02;
+const uint8_t COND_CC = 0x03;
+const uint8_t COND_MI = 0x04;
+const uint8_t COND_PL = 0x05;
+const uint8_t COND_VS = 0x06;
+const uint8_t COND_VC = 0x07;
+const uint8_t COND_HI = 0x08;
+const uint8_t COND_LS = 0x09;
+const uint8_t COND_GE = 0x0A;
+const uint8_t COND_LT = 0x0B;
+const uint8_t COND_GT = 0x0C;
+const uint8_t COND_LE = 0x0D;
+const uint8_t COND_AL = 0x0E;
 
 enum PARSER_STATE {
     INITIAL,
@@ -52,6 +69,7 @@ enum PARSER_STATE {
 };
 
 enum MNEMONIC {
+    NO_MATCH,
     ADD,
     AND,
     B,
@@ -87,7 +105,16 @@ class Instruction {
             struct {
                 uint8_t rn;
                 uint8_t rd;
-                uint16_t operand2;
+                union {
+                    struct {
+                        uint8_t rm;
+                        uint8_t shift;
+                    } reg;
+                    struct {
+                        uint8_t rotate;
+                        uint8_t imm;
+                    } imm;
+                } operand2;
             } dataProcessing;
             // LDR, STR
             struct {
@@ -100,8 +127,10 @@ class Instruction {
     public:
         Instruction(MNEMONIC m, uint32_t offset);
         ~Instruction();
+        void setTlInstructionPtr(Instruction *tl);
         void setCondition(uint8_t cond);
-        void dataProcessing(uint8_t rn, uint8_t rd, uint16_t operand2);
+        void dataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh);
+        void dataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im);
         void singleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset);
         void branch(uint32_t offset);
 };
@@ -118,6 +147,7 @@ class Function {
         Function(string label);
         ~Function();
         Instruction *appendInstruction(Instruction instruction);
+        void setTlFunctionPtr(Function *tl);
         void freeInstructions();
 };
 
@@ -141,8 +171,12 @@ class Area {
         Procedure*      startProcedurePtr;
 
     public:
-        Area(string name, AREA_TYPE type, AREA_PERMISSION permission);
+        Area(string _name, AREA_TYPE _type, AREA_PERMISSION _permission);
+        Procedure *appendProcedure(Procedure procedure);
         ~Area();
 };
+
+MNEMONIC    getMnemonicFromString(string word);
+uint8_t     getRegisterFromString(string word);
 
 #endif

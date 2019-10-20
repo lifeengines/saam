@@ -38,16 +38,28 @@ Instruction::Instruction(MNEMONIC m, uint32_t offset) {
     tlInstructionPtr = NULL;
 }
 
+Instruction::~Instruction() {}
+
+void Instruction::setTlInstructionPtr(Instruction *tl) {
+    tlInstructionPtr = tl;
+}
+
 void Instruction::setCondition(uint8_t condition) {
     cond = condition;
 }
 
-Instruction::~Instruction() {}
-
-void Instruction::dataProcessing(uint8_t rn, uint8_t rd, uint16_t operand2) {
+void Instruction::dataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh) {
     body.dataProcessing.rn = rn;
     body.dataProcessing.rd = rd;
-    body.dataProcessing.operand2 = operand2;
+    body.dataProcessing.operand2.reg.rm = rm;
+    body.dataProcessing.operand2.reg.shift = sh;
+}
+
+void Instruction::dataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im) {
+    body.dataProcessing.rn = rn;
+    body.dataProcessing.rd = rd;
+    body.dataProcessing.operand2.imm.rotate = ro;
+    body.dataProcessing.operand2.imm.imm = im;
 }
 
 void Instruction::singleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset) {
