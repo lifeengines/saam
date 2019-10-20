@@ -28,3 +28,40 @@
  *  Description:
  * 
  -----------------------------------------------------------------------*/
+
+#include "all.h"
+
+unordered_map<string, MNEMONIC> mnemonicTable = {
+    {"ADD"  , ADD},
+    {"AND"  , AND},
+    {"B"    , B},
+    {"LDR"  , LDR},
+    {"MOV"  , MOV},
+    {"ORR"  , ORR},
+    {"SUB"  , SUB}
+};
+
+unordered_map<string, uint8_t> registerTable = {
+    {"r0"   , 0x01},
+    {"r1"   , 0x02},
+    {"r2"   , 0x03},
+    {"r3"   , 0x04},
+    {"r4"   , 0x05},
+    {"r5"   , 0x06},
+    {"r6"   , 0x07},
+    {"r7"   , 0x08},
+    {"r8"   , 0x09},
+    {"r9"   , 0x0A},
+    {"r10"  , 0x0B},
+    {"r11"  , 0x0C},
+    {"r12"  , 0x0D},
+};
+
+MNEMONIC getMnemonicFromString(string word) {
+    try {
+        return mnemonicTable.at(word);
+    }
+    catch (out_of_range) {
+        return NO_MATCH;
+    }
+}

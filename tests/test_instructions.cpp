@@ -34,8 +34,25 @@
 
 using namespace std;
 
-int main() {
-    Instruction *a = new Instruction(AND, 0);
-    delete a;
+int main () {
+    string word;
+    ifstream file ("tests/sample-snippet/data-processing.s");
+
+    if (file.is_open()) {
+        while (file >> word) {
+            switch (getMnemonicFromString(word)) {
+                case ADD:
+                    cout << "Hello\n";
+                    break;
+                default:
+                    cout << "Hi\n";
+            }
+            cout << word << '\n';
+        }
+        file.close();
+    }
+    else {
+        cerr << "Unable to open file\n"; 
+    }
     return 0;
 }
