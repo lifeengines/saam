@@ -1,5 +1,6 @@
 # MacOS
 .DS_Store
+.vscode
 
 # Prerequisites
 *.d
@@ -33,3 +34,4 @@
 *.exe
 *.out
 *.app
+test-*
