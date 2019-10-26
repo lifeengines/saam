@@ -34,6 +34,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <regex>
 
 using namespace std;
 
@@ -96,6 +97,8 @@ class Instruction {
         Instruction*    tlInstructionPtr;
 
         uint8_t         cond;
+        uint8_t         immOperand;
+
         union {
             // Branch
             struct {
@@ -129,10 +132,11 @@ class Instruction {
         ~Instruction();
         void setTlInstructionPtr(Instruction *tl);
         void setCondition(uint8_t cond);
-        void dataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh);
-        void dataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im);
-        void singleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset);
-        void branch(uint32_t offset);
+        void setImmOperand(uint8_t value);
+        void setDataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh);
+        void setDataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im);
+        void setSingleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset);
+        void setBranch(uint32_t offset);
 };
 
 class Function {
@@ -178,5 +182,7 @@ class Area {
 
 MNEMONIC    getMnemonicFromString(string word);
 uint8_t     getRegisterFromString(string word);
+
+Instruction*    createInstructionFromLine(string line);
 
 #endif

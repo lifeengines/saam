@@ -31,7 +31,9 @@
 
 #include "all.h"
 
-unordered_map<string, MNEMONIC> mnemonicTable = {
+using namespace std;
+
+const unordered_map<string, MNEMONIC> mnemonicTable = {
     {"ADD"  , ADD},
     {"AND"  , AND},
     {"B"    , B},
@@ -41,7 +43,7 @@ unordered_map<string, MNEMONIC> mnemonicTable = {
     {"SUB"  , SUB}
 };
 
-unordered_map<string, uint8_t> registerTable = {
+const unordered_map<string, uint8_t> registerTable = {
     {"r0"   , 0x01},
     {"r1"   , 0x02},
     {"r2"   , 0x03},
@@ -57,11 +59,34 @@ unordered_map<string, uint8_t> registerTable = {
     {"r12"  , 0x0D},
 };
 
+regex dataProcessingRegInstruction
+("([a-zA-Z]{3})([a-zA-Z]{0,2})\\s+(\\w{2}),\\s*(\\w{2}),\\s*(\\w{2})\\s*(;.*)*");
+
+Instruction *createInstructionFromLine(string line) {
+    smatch m;
+
+    if (regex_match(line, m, dataProcessingRegInstruction)) {
+        for (auto x : m) {
+            cout << x << "\n";
+        }
+    }
+    return NULL;
+}
+
 MNEMONIC getMnemonicFromString(string word) {
     try {
         return mnemonicTable.at(word);
     }
     catch (out_of_range) {
         return NO_MATCH;
+    }
+}
+
+uint8_t getRegisterFromString(string word) {
+    try {
+        return registerTable.at(word);
+    }
+    catch (out_of_range) {
+        return 0x00;
     }
 }

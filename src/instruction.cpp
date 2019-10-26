@@ -48,27 +48,31 @@ void Instruction::setCondition(uint8_t condition) {
     cond = condition;
 }
 
-void Instruction::dataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh) {
+void Instruction::setImmOperand(uint8_t value) {
+    immOperand = value;
+}
+
+void Instruction::setDataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh) {
     body.dataProcessing.rn = rn;
     body.dataProcessing.rd = rd;
     body.dataProcessing.operand2.reg.rm = rm;
     body.dataProcessing.operand2.reg.shift = sh;
 }
 
-void Instruction::dataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im) {
+void Instruction::setDataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im) {
     body.dataProcessing.rn = rn;
     body.dataProcessing.rd = rd;
     body.dataProcessing.operand2.imm.rotate = ro;
     body.dataProcessing.operand2.imm.imm = im;
 }
 
-void Instruction::singleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset) {
+void Instruction::setSingleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset) {
     body.singleDataTransfer.rn = rn;
     body.singleDataTransfer.rd = rd;
     body.singleDataTransfer.offset = offset;
 }
 
-void Instruction::branch(uint32_t offset) {
+void Instruction::setBranch(uint32_t offset) {
     body.branch.offset = offset;
 }
 

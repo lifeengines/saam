@@ -23,30 +23,8 @@
  *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- *  File name: test_instructions.cpp
+ *  File name: test_area.cpp
  *
- *  Description: Test driver for Instruction class
+ *  Description: Test driver for Area class
  * 
  -----------------------------------------------------------------------*/
-
-#include <assert.h>
-#include "../src/all.h"
-
-using namespace std;
-
-int main () {
-    string line;
-    ifstream file ("tests/sample-snippet/data-processing.s");
-
-    if (file.is_open()) {
-        while (getline(file, line)) {
-            cout << line << '\n';
-            createInstructionFromLine(line);
-        }
-        file.close();
-    }
-    else {
-        cerr << "Unable to open file\n"; 
-    }
-    return 0;
-}
