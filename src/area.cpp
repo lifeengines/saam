@@ -23,55 +23,21 @@
  *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- *  File name: instruction.cpp
+ *  File name: area.cpp
  *
- *  Description: Function definitions for Instruction class
+ *  Description: Function definitions for Area class
  *  See individual description for more details.
  * 
  -----------------------------------------------------------------------*/
 
 #include "all.h"
-#include "instruction.h"
 
-Instruction::Instruction(MNEMONIC m, uint32_t offset, CONDITION c) {
-    mnemonic    = m;
-    memOffset   = offset;
-    cond        = c;
-};
+Area::Area(string _name, AREA_TYPE _type, AREA_PERMISSION _permission) {
+    name = _name;
+    type = _type;
+    permission = _permission;
+    startProcedurePtr = NULL;
+}
 
-Instruction::~Instruction(){};
-
-void Instruction::setTlInstructionPtr(Instruction *tl) {
-    tlInstructionPtr = tl;
-};
-
-DataProc::DataProc(MNEMONIC m, uint32_t offset, CONDITION c) 
-        : Instruction(m, offset, c) {};
-
-DataProc::~DataProc() {};
-
-void DataProc::setRegisterRn(REGISTER r) {
-    rn = r;
-};
-void DataProc::setRegisterRd(REGISTER r) {
-    rd = r;
-};
-void DataProc::setImmOperand(uint8_t imm) {
-    immOperand = imm;
-};
-
-// bool DataProc::setRegOperand2_ImmValShift(uint8_t type, uint8_t amount) {
-// };
-
-// bool DataProc::setRegOperand2_RegShift(REGISTER r, uint8_t type) {
-//     operand2.regOperand2.shift.regShift.shiftReg = r;
-// };
-
-// bool DataProc::setImmOperand2 (uint8_t rotate, uint8_t imm) {
-
-// };
-
-// uint32_t DataProc::get32BitInstruction() {
-
-// };
-
+// TODO: Free procedure
+Area::~Area() {}

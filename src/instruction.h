@@ -42,10 +42,10 @@ class Instruction {
         MNEMONIC        mnemonic;
         uint32_t        memOffset;
         Instruction*    tlInstructionPtr;
-        uint8_t         cond;
+        CONDITION       cond;
 
     public:
-        Instruction(MNEMONIC m, uint32_t offset, uint8_t c);
+        Instruction(MNEMONIC m, uint32_t offset, CONDITION c);
         ~Instruction();
         void setTlInstructionPtr(Instruction *tl);
 };
@@ -77,7 +77,7 @@ class DataProc : public Instruction {
         } operand2;
 
     public:
-        DataProc(MNEMONIC m, uint32_t offset, uint8_t c);
+        DataProc(MNEMONIC m, uint32_t offset, CONDITION c);
         ~DataProc();
         void setRegisterRn(REGISTER r);
         void setRegisterRd(REGISTER r);
