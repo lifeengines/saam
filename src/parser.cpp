@@ -29,7 +29,7 @@
  * 
  -----------------------------------------------------------------------*/
 
-#include "all.h"
+#include "parser.h"
 
 using namespace std;
 
@@ -43,35 +43,24 @@ const unordered_map<string, MNEMONIC> mnemonicTable = {
     {"SUB"  , SUB}
 };
 
-const unordered_map<string, uint8_t> registerTable = {
-    {"r0"   , 0x01},
-    {"r1"   , 0x02},
-    {"r2"   , 0x03},
-    {"r3"   , 0x04},
-    {"r4"   , 0x05},
-    {"r5"   , 0x06},
-    {"r6"   , 0x07},
-    {"r7"   , 0x08},
-    {"r8"   , 0x09},
-    {"r9"   , 0x0A},
-    {"r10"  , 0x0B},
-    {"r11"  , 0x0C},
-    {"r12"  , 0x0D},
+const unordered_map<string, REGISTER> registerTable = {
+    { "R0"  , R0  },
+    { "R1"  , R1  },
+    { "R2"  , R2  },
+    { "R3"  , R3  },
+    { "R4"  , R4  },
+    { "R5"  , R5  },
+    { "R6"  , R6  },
+    { "R7"  , R7  },
+    { "R8"  , R8  },
+    { "R9"  , R9  },
+    { "R10" , R10 },
+    { "R11" , R11 },
+    { "R12" , R12 },
+    { "R13" , R13 },
+    { "R14" , R14 },
+    { "R15" , R15 },
 };
-
-regex dataProcessingRegInstruction
-("([a-zA-Z]{3})([a-zA-Z]{0,2})\\s+(\\w{2}),\\s*(\\w{2}),\\s*(\\w{2})\\s*(;.*)*");
-
-Instruction *createInstructionFromLine(string line) {
-    smatch m;
-
-    if (regex_match(line, m, dataProcessingRegInstruction)) {
-        for (auto x : m) {
-            cout << x << "\n";
-        }
-    }
-    return NULL;
-}
 
 MNEMONIC getMnemonicFromString(string word) {
     try {
@@ -89,4 +78,18 @@ uint8_t getRegisterFromString(string word) {
     catch (out_of_range) {
         return 0x00;
     }
+}
+
+Instruction *createInstructionFromLine(string line) {
+    smatch m;
+    if (regex_match(line, m, DATAPROC_REG_OP2_REGEX)) {
+        cout << "REG_OP2" << "\n";
+    }
+    else if (regex_match(line, m, DATAPROC_IMMVAL_OP2_REGEX)){
+        cout << "IMVAL_OP2" << "\n";
+    }
+    else {
+        cout << "No match" << "\n";
+    }
+    return NULL;
 }

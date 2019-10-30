@@ -31,48 +31,47 @@
  -----------------------------------------------------------------------*/
 
 #include "all.h"
+#include "instruction.h"
 
-Instruction::Instruction(MNEMONIC m, uint32_t offset) {
-    mnemonic = m;
-    memOffset = offset;
-    tlInstructionPtr = NULL;
-}
+Instruction::Instruction(MNEMONIC m, uint32_t offset, uint8_t c) {
+    mnemonic    = m;
+    memOffset   = offset;
+    cond        = c;
+};
 
-Instruction::~Instruction() {}
+Instruction::~Instruction(){};
 
 void Instruction::setTlInstructionPtr(Instruction *tl) {
     tlInstructionPtr = tl;
-}
+};
 
-void Instruction::setCondition(uint8_t condition) {
-    cond = condition;
-}
+DataProc::DataProc(MNEMONIC m, uint32_t offset, uint8_t c) 
+        : Instruction(m, offset , c) {};
 
-void Instruction::setImmOperand(uint8_t value) {
-    immOperand = value;
-}
+DataProc::~DataProc() {};
 
-void Instruction::setDataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh) {
-    body.dataProcessing.rn = rn;
-    body.dataProcessing.rd = rd;
-    body.dataProcessing.operand2.reg.rm = rm;
-    body.dataProcessing.operand2.reg.shift = sh;
-}
+void DataProc::setRegisterRn(REGISTER r) {
+    rn = r;
+};
+void DataProc::setRegisterRd(REGISTER r) {
+    rd = r;
+};
+void DataProc::setImmOperand(uint8_t imm) {
+    immOperand = imm;
+};
 
-void Instruction::setDataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im) {
-    body.dataProcessing.rn = rn;
-    body.dataProcessing.rd = rd;
-    body.dataProcessing.operand2.imm.rotate = ro;
-    body.dataProcessing.operand2.imm.imm = im;
-}
+// bool DataProc::setRegOperand2_ImmValShift(uint8_t type, uint8_t amount) {
+// };
 
-void Instruction::setSingleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset) {
-    body.singleDataTransfer.rn = rn;
-    body.singleDataTransfer.rd = rd;
-    body.singleDataTransfer.offset = offset;
-}
+// bool DataProc::setRegOperand2_RegShift(REGISTER r, uint8_t type) {
+//     operand2.regOperand2.shift.regShift.shiftReg = r;
+// };
 
-void Instruction::setBranch(uint32_t offset) {
-    body.branch.offset = offset;
-}
+// bool DataProc::setImmOperand2 (uint8_t rotate, uint8_t imm) {
+
+// };
+
+// uint32_t DataProc::get32BitInstruction() {
+
+// };
 

@@ -25,8 +25,8 @@
  * 
  *  File name: all.h
  *
- *  Description: Class declarations and constants for all source files. 
- *  See individual description for more details.
+ *  Description: Helper function declarations and constants for 
+ *  all source files. See individual description for more details.
  * 
  -----------------------------------------------------------------------*/
 
@@ -34,6 +34,7 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <vector> 
 #include <regex>
 
 using namespace std;
@@ -41,21 +42,21 @@ using namespace std;
 #ifndef ALL_H_
 #define ALL_H_
 
-const uint8_t COND_EQ = 0x00;
-const uint8_t COND_NE = 0x01;
-const uint8_t COND_CS = 0x02;
-const uint8_t COND_CC = 0x03;
-const uint8_t COND_MI = 0x04;
-const uint8_t COND_PL = 0x05;
-const uint8_t COND_VS = 0x06;
-const uint8_t COND_VC = 0x07;
-const uint8_t COND_HI = 0x08;
-const uint8_t COND_LS = 0x09;
-const uint8_t COND_GE = 0x0A;
-const uint8_t COND_LT = 0x0B;
-const uint8_t COND_GT = 0x0C;
-const uint8_t COND_LE = 0x0D;
-const uint8_t COND_AL = 0x0E;
+const uint8_t COND_EQ = 0x01;
+const uint8_t COND_NE = 0x02;
+const uint8_t COND_CS = 0x03;
+const uint8_t COND_CC = 0x04;
+const uint8_t COND_MI = 0x05;
+const uint8_t COND_PL = 0x06;
+const uint8_t COND_VS = 0x07;
+const uint8_t COND_VC = 0x08;
+const uint8_t COND_HI = 0x09;
+const uint8_t COND_LS = 0x0A;
+const uint8_t COND_GE = 0x0B;
+const uint8_t COND_LT = 0x0C;
+const uint8_t COND_GT = 0x0D;
+const uint8_t COND_LE = 0x0E;
+const uint8_t COND_AL = 0x0F;
 
 enum PARSER_STATE {
     INITIAL,
@@ -69,6 +70,69 @@ enum PARSER_STATE {
     SYNTAX_ERROR
 };
 
+// Regexes
+// const regex AREA_REGEX("AREA\\s*(\\w+),\\s*(\\w+),\\s*(\\w+)\\s*(;.*)*");
+// const regex PROC_REGEX("(\\w+)\\s*PROC\\s*(;.*)*");
+
+const string SPACE              = "\\s*";
+const string OPCODE_REGEX       = "[A-Z]{3}|[a-z]{3}";
+const string COND_REGEX         = "[A-Z]{0,2}|[a-z]{0,2}";
+const string UPDATE_FLAG        = "[sS]{0,1}";
+const string REGISTER_REGEX     = "\\w{2,3}";
+const string REG_SHIFT_NAME     = "\\w{3}";
+const string REG_SHIFT_AMOUNT   = "#\\d{1,2}|\\w{2,3}";
+const string IMM_VAL_DEC        = "#\\d+";
+const string IMM_VAL_HEX        = "#0x\\d+";
+const string COMMENT_REGEX      = "(?:;.*)*";
+
+/*=============================================================================
+ * Data Processing Instruction 
+ * ===========================
+ * Register Operand 2 Regex: <opcode>{cond}{S} {Rd,} Rn, <Op2>
+ *      + Capture group 1: 
+ *      + Capture group 2:
+ *      + Capture group 3:
+ *      + Capture group 4: 
+ *      + Capture group 5:
+ *      + Capture group 6:
+ *===========================================================================*/
+
+const regex DATAPROC_REG_OP2_REGEX(
+    "("     + OPCODE_REGEX      + ")"   +
+    "("     + UPDATE_FLAG       + ")"   +
+    "("     + COND_REGEX        + ")"   + SPACE +
+    "("     + REGISTER_REGEX    + ")"   + SPACE + "," + SPACE +
+    "("     + REGISTER_REGEX    + ")"   + SPACE +
+    "(?:,"  + SPACE             + "("   + REGISTER_REGEX      
+            + ")){0,1}"         + SPACE +
+    "(?:,"  + SPACE             + "("           + REG_SHIFT_NAME   + ")"
+            + SPACE             + "("           + REG_SHIFT_AMOUNT + ")){0,1}"
+            + SPACE             + COMMENT_REGEX);
+
+const regex DATAPROC_IMMVAL_OP2_REGEX(
+    "("     + OPCODE_REGEX      + ")"   +
+    "("     + UPDATE_FLAG       + ")"   +
+    "("     + COND_REGEX        + ")"   + SPACE +
+    "("     + REGISTER_REGEX    + ")"   + SPACE + "," + SPACE +
+    "("     + REGISTER_REGEX    + ")"   + SPACE + "," + SPACE +
+    "("     + IMM_VAL_HEX      + "|"   + IMM_VAL_DEC + ")"
+            + SPACE             + COMMENT_REGEX);
+
+/*=============================================================================
+ * Branch Instruction 
+ * ==================
+ * Register Operand 2 Regex: <opcode>{cond}{S} {Rd,} Rn, <Op2>
+ *      + Capture group 1: 
+ *      + Capture group 2:
+ *      + Capture group 3:
+ *      + Capture group 4: 
+ *      + Capture group 5:
+ *      + Capture group 6:
+ *===========================================================================*/
+
+const regex branchInstruction
+("");
+
 enum MNEMONIC {
     NO_MATCH,
     ADD,
@@ -80,109 +144,23 @@ enum MNEMONIC {
     SUB
 };
 
-enum AREA_TYPE {
-    CODE,
-    DATA
+enum REGISTER {
+    R0,
+    R1,
+    R2,
+    R3,
+    R4,
+    R5,
+    R6,
+    R7,
+    R8,
+    R9,
+    R10,
+    R11,
+    R12,    // IP
+    R13,    // SP
+    R14,    // LR
+    R15,    // PC
 };
-
-enum AREA_PERMISSION {
-    READONLY,
-    READWRITE
-};
-
-class Instruction {
-    private:
-        MNEMONIC        mnemonic;
-        uint32_t        memOffset;
-        Instruction*    tlInstructionPtr;
-
-        uint8_t         cond;
-        uint8_t         immOperand;
-
-        union {
-            // Branch
-            struct {
-                uint32_t offset;
-            } branch;
-            // AND, SUB, ADD, MOV
-            struct {
-                uint8_t rn;
-                uint8_t rd;
-                union {
-                    struct {
-                        uint8_t rm;
-                        uint8_t shift;
-                    } reg;
-                    struct {
-                        uint8_t rotate;
-                        uint8_t imm;
-                    } imm;
-                } operand2;
-            } dataProcessing;
-            // LDR, STR
-            struct {
-                uint8_t rn;
-                uint8_t rd;
-                uint16_t offset; 
-            } singleDataTransfer;
-        } body;
-        
-    public:
-        Instruction(MNEMONIC m, uint32_t offset);
-        ~Instruction();
-        void setTlInstructionPtr(Instruction *tl);
-        void setCondition(uint8_t cond);
-        void setImmOperand(uint8_t value);
-        void setDataProcReg(uint8_t rn, uint8_t rd, uint8_t rm, uint8_t sh);
-        void setDataProcImm(uint8_t rn, uint8_t rd, uint8_t ro, uint8_t im);
-        void setSingleDataTransfer(uint8_t rn, uint8_t rd, uint16_t offset);
-        void setBranch(uint32_t offset);
-};
-
-class Function {
-    private:
-        string          label;
-        Instruction*    startInstruction;
-        Instruction*    lastInstruction;
-        Function*       tlFunctionPtr;
-        uint32_t        memOffset;
-    
-    public:
-        Function(string label);
-        ~Function();
-        Instruction *appendInstruction(Instruction instruction);
-        void setTlFunctionPtr(Function *tl);
-        void freeInstructions();
-};
-
-class Procedure {
-    private:
-        string          label;
-        Procedure*      tlProcedurePtr;
-
-    public:
-        Procedure(string label);
-        ~Procedure();
-        Function *appendFunction(Function function);
-        void freeFunctions();
-};
-
-class Area {
-    private:
-        string          name;
-        AREA_TYPE       type;
-        AREA_PERMISSION permission;
-        Procedure*      startProcedurePtr;
-
-    public:
-        Area(string _name, AREA_TYPE _type, AREA_PERMISSION _permission);
-        Procedure *appendProcedure(Procedure procedure);
-        ~Area();
-};
-
-MNEMONIC    getMnemonicFromString(string word);
-uint8_t     getRegisterFromString(string word);
-
-Instruction*    createInstructionFromLine(string line);
 
 #endif

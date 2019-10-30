@@ -30,7 +30,7 @@
  -----------------------------------------------------------------------*/
 
 #include <assert.h>
-#include "../src/all.h"
+#include "../src/parser.h"
 
 using namespace std;
 
@@ -40,7 +40,7 @@ int main () {
 
     if (file.is_open()) {
         while (getline(file, line)) {
-            cout << line << '\n';
+            // cout << line << '\n';
             createInstructionFromLine(line);
         }
         file.close();
