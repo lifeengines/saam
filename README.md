@@ -1,6 +1,6 @@
 # saam
 
-Small ARM Assembler Module in C++
+Small ARM 32-bit instruction Assembler Module in C++
 
 ## Installing
 

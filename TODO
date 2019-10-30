@@ -1,0 +1,26 @@
+Supported directives
+====================
+( ) AREA
+( ) ALIGN
+
+Supported instructions
+======================
+
+
+===============================================================================
+TODOs
+=====
+( ) Instruction subclasses
+( ) Flexible operand 2 Regex
+    ( ) op2 = #constant (8 bits)
+    ( ) op2 = Rm{, shift}
+( ) Single operand instructions (MOV, MVN) <opcode>{cond}{S} Rd,<Op2>
+( ) CMP,CMN,TEQ,TST 
+( ) 2-operands instructions <opcode>{cond}{S} Rd,Rn,<Op2>
+
+( ) AREA DATA directive
+
+( ) Bitpack module
+( ) State machine
+( ) Comments and documentation
+
