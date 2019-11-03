@@ -23,32 +23,24 @@
  *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- *  File name: error.cpp
+ *  File name: test_error.cpp
  *
- *  Description:
+ *  Description: Test driver for Error queue class
  * 
  -----------------------------------------------------------------------*/
-#include "error.h"
 
-ErrorQueue::ErrorQueue() {};
+#include <assert.h>
+#include "../src/error.h"
 
-ErrorQueue::~ErrorQueue() {};
+int main() {
+    ErrorQueue q = ErrorQueue();
 
-void ErrorQueue::printErrors() {
-    while (!q.empty()) {
-        Error e = q.front();
-        std::cerr << e.message << "\n";
-        q.pop();
+    for (int i = 0; i < 10; i++) {
+        Error e = {(uint32_t)i, INVALID_SYNTAX, std::to_string(i)};
+        q.addError(e);
     }
-};
 
-bool ErrorQueue::addError(Error &e) {
-    try {
-        q.push(e);
-        return true;
-    }
-    catch (std::bad_alloc) {
-        std::cerr << "Something went wrong" << "\n";
-        return false;
-    }
-};
+    q.printErrors();
+    
+    return EXIT_SUCCESS;
+}

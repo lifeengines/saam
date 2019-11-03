@@ -34,10 +34,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
-#include <vector> 
+#include <queue> 
 #include <regex>
-
-using namespace std;
 
 #ifndef ALL_H_
 #define ALL_H_
@@ -58,16 +56,16 @@ enum PARSER_STATE {
  * Regexes
  *===========================================================================*/
 
-const string SPACE              = "\\s*";
-const string OPCODE_REGEX       = "[A-Z]{3}|[a-z]{3}";
-const string COND_REGEX         = "[A-Z]{0,2}|[a-z]{0,2}";
-const string UPDATE_FLAG        = "[sS]{0,1}";
-const string REGISTER_REGEX     = "\\w{2,3}";
-const string REG_SHIFT_NAME     = "\\w{3}";
-const string REG_SHIFT_AMOUNT   = "#\\d{1,2}|\\w{2,3}";
-const string IMM_VAL_DEC        = "#\\d+";
-const string IMM_VAL_HEX        = "#0x\\d+";
-const string COMMENT_REGEX      = "(?:;.*)*";
+const std::string SPACE              = "\\s*";
+const std::string OPCODE_REGEX       = "[A-Z]{3}|[a-z]{3}";
+const std::string COND_REGEX         = "[A-Z]{0,2}|[a-z]{0,2}";
+const std::string UPDATE_FLAG        = "[sS]{0,1}";
+const std::string REGISTER_REGEX     = "\\w{2,3}";
+const std::string REG_SHIFT_NAME     = "\\w{3}";
+const std::string REG_SHIFT_AMOUNT   = "#\\d{1,2}|\\w{2,3}";
+const std::string IMM_VAL_DEC        = "#\\d+";
+const std::string IMM_VAL_HEX        = "#0x\\d+";
+const std::string COMMENT_REGEX      = "(?:;.*)*";
 
 /*=============================================================================
  * Data Processing Instruction 
@@ -91,7 +89,7 @@ const string COMMENT_REGEX      = "(?:;.*)*";
  *      + Capture group 6: Hex/Dec immediate value
  *===========================================================================*/
 
-const regex DATAPROC_REG_OP2_REGEX(
+const std::regex DATAPROC_REG_OP2_REGEX(
     "("     + OPCODE_REGEX      + ")"   +
     "("     + UPDATE_FLAG       + ")"   +
     "("     + COND_REGEX        + ")"   + SPACE +
@@ -103,7 +101,7 @@ const regex DATAPROC_REG_OP2_REGEX(
             + SPACE             + "("           + REG_SHIFT_AMOUNT + ")){0,1}"
             + SPACE             + COMMENT_REGEX);
 
-const regex DATAPROC_IMMVAL_OP2_REGEX(
+const std::regex DATAPROC_IMMVAL_OP2_REGEX(
     "("     + OPCODE_REGEX      + ")"   +
     "("     + UPDATE_FLAG       + ")"   +
     "("     + COND_REGEX        + ")"   + SPACE +
@@ -125,8 +123,14 @@ const regex DATAPROC_IMMVAL_OP2_REGEX(
  *      + Capture group 6:
  *===========================================================================*/
 
-const regex branchInstruction
+const std::regex branchInstruction
 ("");
+
+enum ERROR_TYPE {
+    INVALID_SYNTAX,
+    UNLINKED_LABEL,
+    UNLINKED_AREA
+};
 
 enum MNEMONIC {
     NO_MATCH_MNEMONIC,

@@ -23,32 +23,31 @@
  *  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE 
  *  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  * 
- *  File name: error.cpp
+ *  File name: error.h
  *
- *  Description:
+ *  Description: Header file for error queue class
  * 
  -----------------------------------------------------------------------*/
-#include "error.h"
 
-ErrorQueue::ErrorQueue() {};
+#include "all.h"
 
-ErrorQueue::~ErrorQueue() {};
+#ifndef ERROR_H_
+#define ERROR_H_
 
-void ErrorQueue::printErrors() {
-    while (!q.empty()) {
-        Error e = q.front();
-        std::cerr << e.message << "\n";
-        q.pop();
-    }
+struct Error {
+    uint32_t    line;
+    ERROR_TYPE  type;
+    std::string message;
 };
 
-bool ErrorQueue::addError(Error &e) {
-    try {
-        q.push(e);
-        return true;
-    }
-    catch (std::bad_alloc) {
-        std::cerr << "Something went wrong" << "\n";
-        return false;
-    }
+class ErrorQueue {
+    private:
+        std::queue<Error> q;
+    public:
+        ErrorQueue();
+        ~ErrorQueue();
+        void printErrors();
+        bool addError(Error &e);
 };
+
+#endif
