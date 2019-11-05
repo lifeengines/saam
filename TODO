@@ -17,6 +17,7 @@ TODOs
 ( ) Single operand instructions (MOV, MVN) <opcode>{cond}{S} Rd,<Op2>
 ( ) CMP,CMN,TEQ,TST 
 ( ) 2-operands instructions <opcode>{cond}{S} Rd,Rn,<Op2>
+( ) Unit tests data processing instructions
 
 ( ) AREA DATA directive
 

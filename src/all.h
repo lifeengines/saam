@@ -52,6 +52,13 @@ enum PARSER_STATE {
     SYNTAX_ERROR
 };
 
+enum LINE_TYPE {
+    DATAPROC_REG_OP2,
+    DATAPROC_IMMVAL_OP2,
+    AREA,
+    NO_MATCH_LINE
+};
+
 /*=============================================================================
  * Regexes
  *===========================================================================*/
@@ -112,22 +119,41 @@ const std::regex DATAPROC_IMMVAL_OP2_REGEX(
             + SPACE             + COMMENT_REGEX);
 
 /*=============================================================================
- * Branch Instruction 
- * ==================
- * Register Operand 2 Regex: <opcode>{cond}{S} {Rd,} Rn, <Op2>
- *      + Capture group 1: 
- *      + Capture group 2:
- *      + Capture group 3:
- *      + Capture group 4: 
- *      + Capture group 5:
- *      + Capture group 6:
+ * Branch Exchange Instruction (BX)
+ * ================================
+ * Branch Exchange Instruction Regex: <BX|bx>{cond} Rn
+ *      + Capture group 1: opcode
+ *      + Capture group 2: cond
+ *      + Capture group 3: Exchange register
+ * 
+ * Branch Instruction (B, BL)
+ * ==========================
+ * Branch Instruction RegexL <B|b>{L} {cond} <label>
+ *      + Capture group 1: opcode
+ *      + Capture group 2: L
+ *      + Capture group 3: cond
+ *      + Capture group 4: label
+ * 
  *===========================================================================*/
 
-const std::regex branchInstruction
-("");
+const std::string BRANCH_EXCHANGE_OPCODE_REGEX = "BX|bx";
+const std::string BRANCH_OPCODE_REGEX = "B|b";
+const std::string BRANCH_LR_REGEX = "L|l";
+const std::string BRANCH_LABEL = "\\w+";
+
+const std::regex BRANCH_EXCHANGE_REGEX(
+    "(" + BRANCH_EXCHANGE_OPCODE_REGEX  + ")" + SPACE +
+    "(" + COND_REGEX                    + ")" + SPACE +
+    "(" + REGISTER_REGEX                + ")" + SPACE + COMMENT_REGEX);
+
+const std::regex BRANCH_REGEX(
+    "(" + BRANCH_OPCODE_REGEX           + ")" + 
+    "(" + BRANCH_LR_REGEX               + ")" + SPACE +
+    "(" + COND_REGEX                    + ")" + SPACE +
+    "(" + BRANCH_LABEL                  + ")" + SPACE + COMMENT_REGEX);
 
 enum ERROR_TYPE {
-    INVALID_SYNTAX,
+    INVALID_TOKEN,
     UNLINKED_LABEL,
     UNLINKED_AREA
 };

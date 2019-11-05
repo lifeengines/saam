@@ -39,39 +39,32 @@ Instruction::Instruction(MNEMONIC m, uint32_t offset, CONDITION c) {
     cond        = c;
 };
 
-Instruction::~Instruction(){};
+Instruction::~Instruction() {};
 
-void Instruction::setTlInstructionPtr(Instruction *tl) {
-    tlInstructionPtr = tl;
+uint32_t Instruction::getMemOffset() {
+    return memOffset;
 };
 
-DataProc::DataProc(MNEMONIC m, uint32_t offset, CONDITION c) 
-        : Instruction(m, offset, c) {};
+void Instruction::setMemOffset(uint32_t offset) {
+    memOffset = offset;
+};
+
+DataProc::DataProc  (MNEMONIC m, uint32_t offset, CONDITION c,
+                    REGISTER _rn, REGISTER _rd, regOperand2 &_regOp)
+                    : Instruction(m, offset, c) { 
+    operand2.regOp = _regOp;
+    rn             = _rn;
+    rd             = _rd;
+    immOperand     = 0;                      
+};
+
+DataProc::DataProc  (MNEMONIC m, uint32_t offset, CONDITION c,
+                    REGISTER _rn, REGISTER _rd, immOperand2 &_immOp)
+                    : Instruction(m, offset, c) {                       
+    operand2.immOp = _immOp;
+    rn             = _rn;
+    rd             = _rd;
+    immOperand     = 1;   
+};
 
 DataProc::~DataProc() {};
-
-void DataProc::setRegisterRn(REGISTER r) {
-    rn = r;
-};
-void DataProc::setRegisterRd(REGISTER r) {
-    rd = r;
-};
-void DataProc::setImmOperand(uint8_t imm) {
-    immOperand = imm;
-};
-
-// bool DataProc::setRegOperand2_ImmValShift(uint8_t type, uint8_t amount) {
-// };
-
-// bool DataProc::setRegOperand2_RegShift(REGISTER r, uint8_t type) {
-//     operand2.regOperand2.shift.regShift.shiftReg = r;
-// };
-
-// bool DataProc::setImmOperand2 (uint8_t rotate, uint8_t imm) {
-
-// };
-
-// uint32_t DataProc::get32BitInstruction() {
-
-// };
-

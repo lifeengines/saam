@@ -32,22 +32,39 @@
 
 #include "all.h"
 
-using namespace std;
-
 #ifndef INSTRUCTION_H_
 #define INSTRUCTION_H_
 
 class Instruction {
     protected:
-        MNEMONIC        mnemonic;
-        uint32_t        memOffset;
-        Instruction*    tlInstructionPtr;
-        CONDITION       cond;
+        MNEMONIC    mnemonic;
+        uint32_t    memOffset = 0xFFFFFFFF;
+        CONDITION   cond;
 
     public:
         Instruction(MNEMONIC m, uint32_t offset, CONDITION c);
         ~Instruction();
-        void setTlInstructionPtr(Instruction *tl);
+        uint32_t getMemOffset();
+        void setMemOffset(uint32_t offset);
+};
+
+struct regOperand2 {
+    REGISTER rm;
+    union {
+        struct {
+            uint8_t shiftType;
+            uint8_t shiftAmount;
+        } immValShift;
+        struct {
+            uint8_t shiftType;
+            REGISTER shiftReg;
+        } regShift;
+    } shift;
+};
+
+struct immOperand2 {
+    uint8_t rotate;
+    uint8_t imm;
 };
 
 class DataProc : public Instruction {
@@ -56,37 +73,20 @@ class DataProc : public Instruction {
         REGISTER rd;
         uint8_t immOperand;
 
+    private:
         union {
-            struct {
-                REGISTER rm;
-                union {
-                    struct {
-                        uint8_t shiftType;
-                        uint8_t shiftAmount;
-                    } immValShift;
-                    struct {
-                        uint8_t shiftType;
-                        REGISTER shiftReg;
-                    } regShift;
-                } shift;
-            } regOperand2;
-            struct {
-                uint8_t rotate;
-                uint8_t imm;
-            } immOperand2;
+            regOperand2 regOp;
+            immOperand2 immOp;
         } operand2;
 
     public:
-        DataProc(MNEMONIC m, uint32_t offset, CONDITION c);
+        DataProc(MNEMONIC m, uint32_t offset, CONDITION c,
+        REGISTER _rn, REGISTER _rd, regOperand2 &_regOp);
+        DataProc(MNEMONIC m, uint32_t offset, CONDITION c,
+        REGISTER _rn, REGISTER _rd, immOperand2 &_immOp);
         ~DataProc();
-        void setRegisterRn(REGISTER r);
-        void setRegisterRd(REGISTER r);
-        void setImmOperand(uint8_t imm);
-       
-        bool setRegOperand2_ImmValShift (uint8_t type, uint8_t amount);
-        bool setRegOperand2_RegShift    (REGISTER r, uint8_t type);
-        bool setImmOperand2 (uint8_t rotate, uint8_t imm);
 
+    public:
         uint32_t get32BitInstruction();
 };
 
