@@ -52,11 +52,11 @@ struct regOperand2 {
     REGISTER rm;
     union {
         struct {
-            uint8_t shiftType;
+            OPERAND2_SHIFT shiftType;
             uint8_t shiftAmount;
         } immValShift;
         struct {
-            uint8_t shiftType;
+            OPERAND2_SHIFT shiftType;
             REGISTER shiftReg;
         } regShift;
     } shift;

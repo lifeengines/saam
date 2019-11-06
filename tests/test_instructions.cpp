@@ -37,11 +37,14 @@ using namespace std;
 int main () {
     string line;
     ifstream file ("tests/sample-snippet/data-processing.s");
+    ErrorQueue q = ErrorQueue();
 
     if (file.is_open()) {
         while (getline(file, line)) {
             // cout << line << '\n';
-            createInstructionFromLine(line);
+            std::pair<LINE_TYPE, std::smatch> match = getLineType(line);
+            if (match.first == DATAPROC_REG_OP2)
+                createDataProcRegOp2(match.second, 0, 0, q);
         }
         file.close();
     }

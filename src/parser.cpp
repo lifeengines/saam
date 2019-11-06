@@ -31,9 +31,7 @@
 
 #include "parser.h"
 
-using namespace std;
-
-const unordered_map<string, MNEMONIC> mnemonicTable = {
+const std::unordered_map<std::string, MNEMONIC> mnemonicTable = {
     {"ADD"  , ADD},
     {"AND"  , AND},
     {"B"    , B},
@@ -43,7 +41,7 @@ const unordered_map<string, MNEMONIC> mnemonicTable = {
     {"SUB"  , SUB}
 };
 
-const unordered_map<string, REGISTER> registerTable = {
+const std::unordered_map<std::string, REGISTER> registerTable = {
     { "R0"  , R0  }, { "r0"  , R0  },
     { "R1"  , R1  }, { "r1"  , R1  },
     { "R2"  , R2  }, { "r2"  , R2  },
@@ -59,10 +57,11 @@ const unordered_map<string, REGISTER> registerTable = {
     { "R12" , R12 }, { "r12" , R12 }, { "IP", R12 }, { "ip", R12 },
     { "R13" , R13 }, { "r13" , R13 }, { "SP", R13 }, { "sp", R13 },
     { "R14" , R14 }, { "r14" , R14 }, { "LR", R14 }, { "lr", R14 },
-    { "R15" , R15 }, { "r15" , R15 }, { "PC", R15 }, { "pc", R15 }
+    { "R15" , R15 }, { "r15" , R15 }, { "PC", R15 }, { "pc", R15 },
+    { ""    , NO_REG }
 };
 
-const unordered_map<string, CONDITION> condTable = {
+const std::unordered_map<std::string, CONDITION> condTable = {
     {"EQ", EQ}, {"eq", EQ},
     {"NE", NE}, {"ne", NE},
     {"CS", CS}, {"cs", CS},
@@ -77,72 +76,162 @@ const unordered_map<string, CONDITION> condTable = {
     {"LT", LT}, {"lt", LT},
     {"GT", GT}, {"gt", GT},
     {"LE", LE}, {"le", LE},
-    {"AL", AL}, {"al", AL}
+    {"AL", AL}, {"al", AL},
+    {""  , NO_COND}
 };
 
-MNEMONIC getMnemonicFromString(string word) {
-    try {
-        return mnemonicTable.at(word);
-    }
-    catch (out_of_range) {
-        return NO_MATCH_MNEMONIC;
-    }
-}
+const std::unordered_map<std::string, OPERAND2_SHIFT> shiftTable = {
+    {"ASR", ASR}, {"LSL", LSL}, {"LSR", LSR}, {"ROR", ROR},
+    {"asr", ASR}, {"lsl", LSL}, {"lsr", LSR}, {"ror", ROR},
+    {"", NO_SHIFT}
+};
 
-REGISTER getRegisterFromString(string word) {
-    try {
-        return registerTable.at(word);
-    }
-    catch (out_of_range) {
-        return NO_MATCH_REGISTER;
-    }
-}
-
-CONDITION getCondFromString(string word) {
-    try {
-        return condTable.at(word);
-    }
-    catch (out_of_range) {
-        return NO_MATCH_COND;
-    }
-}
-/*=============================================================================
- * Data Processing Instruction 
- * ===========================
- * Register Operand 2 Regex: <opcode>{s}{cond} Rd, Rn {,Rm} {,<name><amount>}
- *      + Capture group 1: Opcode
- *      + Capture group 2: Update flag
- *      + Capture group 3: Condition flag
- *      + Capture group 4: Register #1
- *      + Capture group 5: Register #2
- *      + Capture group 6: <Optional> Register #3
- *      + Capture group 7: <Optional> Shift name [ASR, LSL, LSR, ROR] 
- *      + Caputre group 8: <Optional> Shift amount [#n (0<=n<=32) | Register]
- */
-// Instruction *createDataProcRegOperand2(MNEMONIC m, smatch sm) {
-
-// }
-
-Instruction *createInstructionFromLine(string line) {
-    smatch m;
-    if (regex_match(line, m, DATAPROC_REG_OP2_REGEX)) {
-        switch (getMnemonicFromString(string(m[1]))) {
-            case ADD:
-                cout << "ADD" << endl;
-                break;
-            case AND:
-                cout << "ADD" << endl;
-                break;
-            default:
-                cout << "NO_MATCH" << endl;
-                break;
+namespace {
+    MNEMONIC getMnemonicFromString(std::string word, uint32_t lineNum, 
+                                        ErrorQueue &q) {
+        try {
+            return mnemonicTable.at(word);
+        }
+        catch (std::out_of_range) {
+            Error e = { lineNum, INVALID_TOKEN, word };
+            q.addError(e);
+            return NO_MATCH_MNEMONIC;
         }
     }
-    else if (regex_match(line, m, DATAPROC_IMMVAL_OP2_REGEX)) {
-        cout << "IMVAL_OP2" << "\n";
+
+    REGISTER getRegisterFromString(std::string word, uint32_t lineNum, 
+                                        ErrorQueue &q) {
+        try {
+            return registerTable.at(word);
+        }
+        catch (std::out_of_range) {
+            Error e = { lineNum, INVALID_TOKEN, word };
+            q.addError(e);
+            return NO_MATCH_REGISTER;
+        }
+    }
+
+    CONDITION getCondFromString(std::string word, uint32_t lineNum, 
+                                        ErrorQueue &q) {
+        try {
+            return condTable.at(word);
+        }
+        catch (std::out_of_range) {
+            Error e = { lineNum, INVALID_TOKEN, word };
+            q.addError(e);
+            return NO_MATCH_COND;
+        }
+    }
+
+    OPERAND2_SHIFT getShiftFromString(std::string word, uint32_t lineNum, 
+                                        ErrorQueue &q) {
+        try {
+            return shiftTable.at(word);
+        }
+        catch (std::out_of_range) {
+            Error e = { lineNum, INVALID_TOKEN, word };
+            q.addError(e);
+            return NO_MATCH_SHIFT;
+        }
+    }
+}
+
+std::pair<LINE_TYPE, std::smatch> getLineType(std::string line) {
+    std::smatch m;
+    if (std::regex_match(line, m, DATAPROC_REG_OP2_REGEX))
+        return std::make_pair(DATAPROC_REG_OP2, m);
+
+    else if (std::regex_match(line, m, DATAPROC_IMMVAL_OP2_REGEX))
+        return std::make_pair(DATAPROC_IMMVAL_OP2, m);
+    
+    else
+        return std::make_pair(NO_MATCH_LINE, m);
+}
+
+DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
+                                    uint32_t lineNum, ErrorQueue &q) {
+
+    std::string mnemonic    = std::string(sm[1]);
+    std::string updateFlag  = std::string(sm[2]);
+    std::string cond        = std::string(sm[3]);
+    std::string reg_1       = std::string(sm[4]);
+    std::string reg_2       = std::string(sm[5]);
+    std::string reg_3       = std::string(sm[6]);
+    std::string shiftName   = std::string(sm[7]);
+    std::string shiftAmt    = std::string(sm[8]);
+
+    MNEMONIC m = getMnemonicFromString(mnemonic, lineNum, q);
+    if (m == NO_MATCH_MNEMONIC) return NULL;
+
+    if (updateFlag != "s" || updateFlag != "S" || updateFlag != "") {
+        Error e = { lineNum, INVALID_TOKEN, updateFlag };
+        q.addError(e);
+        return NULL;
+    }
+
+    CONDITION c = getCondFromString(cond, lineNum, q);
+    if (c == NO_MATCH_COND) return NULL;
+
+    REGISTER rn = getRegisterFromString(reg_1, lineNum, q);
+    if (rn == NO_MATCH_REGISTER) return NULL;
+
+    REGISTER rd = getRegisterFromString(reg_2, lineNum, q);
+    if (rd == NO_MATCH_REGISTER) return NULL;
+
+    REGISTER rm = getRegisterFromString(reg_3, lineNum, q);
+    if (rn == NO_MATCH_REGISTER) return NULL;
+
+    OPERAND2_SHIFT s = getShiftFromString(shiftName, lineNum, q);
+    
+    uint8_t sAmount = 0;
+    REGISTER sReg = NO_REG;
+
+    switch (s) {
+        case NO_MATCH_SHIFT:
+            return NULL;
+        case NO_SHIFT:
+            if (shiftAmt != "") {
+                Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
+                q.addError(e);
+                return NULL;
+            }
+            break;
+        default:
+            if (shiftAmt == "") {
+                Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
+                q.addError(e);
+                return NULL;
+            }
+            else if (shiftAmt[0] == '#') {
+                if ((stoi(shiftAmt.substr(1)) < 0) || 
+                    (stoi(shiftAmt.substr(1)) > 32)) {
+                    Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
+                    q.addError(e);
+                    return NULL;
+                }
+                else {
+                    sAmount = stoi(shiftAmt.substr(1));
+                }
+            }
+            else {
+                sReg = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
+                if (sReg == NO_MATCH_REGISTER) return NULL;
+            } 
+            break;
+    }
+
+    // Return instruction
+    regOperand2 op2;
+    if (sAmount == 0) {
+        op2.rm = rm;
+        op2.shift.regShift.shiftType = s;
+        op2.shift.regShift.shiftReg = sReg;
     }
     else {
-        cout << "No match" << "\n";
+        op2.rm = rm;
+        op2.shift.immValShift.shiftType = s;
+        op2.shift.immValShift.shiftAmount = sAmount;
     }
-    return NULL;
+    
+    return new DataProc(m, mem, c, rn, rd, op2);
 }

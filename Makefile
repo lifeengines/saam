@@ -52,9 +52,10 @@ saam: src/main.o
 	$(CC) $(CFLAGS) -o saam src/main.o
 
 # Unit tests
-test-instructions: tests/test_instructions.o src/instruction.o src/parser.o
+test-instructions: tests/test_instructions.o src/instruction.o \
+					src/parser.o src/error.o
 	$(CC) $(CFLAGS) -o tests/test-instructions tests/test_instructions.o \
-					src/instruction.o src/parser.o
+					src/instruction.o src/parser.o src/error.o
 
 test-error: tests/test_error.o src/error.o
 	$(CC) $(CFLAGS) -o tests/test-error tests/test_error.o src/error.o
