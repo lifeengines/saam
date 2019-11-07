@@ -33,10 +33,46 @@
 #include "all.h"
 #include "instruction.h"
 
-Instruction::Instruction(MNEMONIC m, uint32_t offset, CONDITION c) {
+/*=============================================================================
+ * Instruction debug lookup tables
+ *===========================================================================*/
+#ifdef _INSTRUCTION_DEBUG_
+
+std::string mnemonicReverseTable[] = {
+    "NO_MATCH_MNEMONIC",
+    "ADD",
+    "AND",
+    "B",
+    "LDR",
+    "MOV",
+    "ORR",
+    "SUB"
+};
+
+std::string operand2ShiftReverseTable[] = {
+    "NO_MATCH_SHIFT", "", "ASR", "LSL", "LSR", "ROR"
+};
+
+std::string conditionReverseTable[] = {
+    "NO_MATCH_COND", "", "EQ", "NE", "CS", "CC", "MI", 
+    "PL", "VS", "VC","HI", "LS", "GE", "LT", "GT", "LE", "AL"
+};
+
+std::string registerReverseTable[] = {
+    "NO_MATCH_REGISTER", "", "R0", "R1", "R2", "R3", "R4", "R5",
+    "R6", "R7", "R8", "R9", "R10", "R11", "R12", "R13", "R14", "R15"
+}; 
+
+#endif
+
+/*=============================================================================
+ * Instruction base class
+ *===========================================================================*/
+Instruction::Instruction(uint32_t offset, MNEMONIC m, bool s, CONDITION c) {
     mnemonic    = m;
     memOffset   = offset;
     cond        = c;
+    updateFlag  = s;
 };
 
 Instruction::~Instruction() {};
@@ -49,18 +85,22 @@ void Instruction::setMemOffset(uint32_t offset) {
     memOffset = offset;
 };
 
-DataProc::DataProc  (MNEMONIC m, uint32_t offset, CONDITION c,
+/*=============================================================================
+ * Data Processing Instruction subclass
+ * Syntax: <opcode>{s}{cond} Rd, Rn {,Rm} {,<name><amount>}
+ *===========================================================================*/
+DataProc::DataProc  (uint32_t offset, MNEMONIC m, bool s, CONDITION c,
                     REGISTER _rn, REGISTER _rd, regOperand2 &_regOp)
-                    : Instruction(m, offset, c) { 
+                    : Instruction(offset, m, s, c) { 
     operand2.regOp = _regOp;
     rn             = _rn;
     rd             = _rd;
     immOperand     = 0;                      
 };
 
-DataProc::DataProc  (MNEMONIC m, uint32_t offset, CONDITION c,
+DataProc::DataProc  (uint32_t offset, MNEMONIC m, bool s, CONDITION c,
                     REGISTER _rn, REGISTER _rd, immOperand2 &_immOp)
-                    : Instruction(m, offset, c) {                       
+                    : Instruction(offset, m, s, c) {                       
     operand2.immOp = _immOp;
     rn             = _rn;
     rd             = _rd;
@@ -68,3 +108,15 @@ DataProc::DataProc  (MNEMONIC m, uint32_t offset, CONDITION c,
 };
 
 DataProc::~DataProc() {};
+
+#ifdef _INSTRUCTION_DEBUG_
+std::string DataProc::getInstructionString() {
+    // std::cout << "HELLO FROM INSTRUCTION" << std::endl;
+    return 
+        mnemonicReverseTable[mnemonic]
+        + (updateFlag ? "s" : "")
+        + conditionReverseTable[cond]
+        + registerReverseTable[rn]
+        + registerReverseTable[rd];
+};
+#endif /* INSTRUCTION DEBUG */

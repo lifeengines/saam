@@ -38,11 +38,12 @@
 class Instruction {
     protected:
         MNEMONIC    mnemonic;
-        uint32_t    memOffset = 0xFFFFFFFF;
+        uint32_t    memOffset;
+        bool        updateFlag;
         CONDITION   cond;
 
     public:
-        Instruction(MNEMONIC m, uint32_t offset, CONDITION c);
+        Instruction( uint32_t offset, MNEMONIC m, bool s, CONDITION c);
         ~Instruction();
         uint32_t getMemOffset();
         void setMemOffset(uint32_t offset);
@@ -80,14 +81,20 @@ class DataProc : public Instruction {
         } operand2;
 
     public:
-        DataProc(MNEMONIC m, uint32_t offset, CONDITION c,
+        DataProc(uint32_t offset, MNEMONIC m, bool s, CONDITION c,
         REGISTER _rn, REGISTER _rd, regOperand2 &_regOp);
-        DataProc(MNEMONIC m, uint32_t offset, CONDITION c,
+        DataProc(uint32_t offset, MNEMONIC m, bool s, CONDITION c,
         REGISTER _rn, REGISTER _rd, immOperand2 &_immOp);
         ~DataProc();
 
     public:
         uint32_t get32BitInstruction();
+
+    /* INSTRUCTION DEBUG */
+    #ifdef _INSTRUCTION_DEBUG_
+    public:
+        std::string getInstructionString();
+    #endif
 };
 
 #endif

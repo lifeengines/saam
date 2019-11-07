@@ -29,6 +29,7 @@
  * 
  -----------------------------------------------------------------------*/
 
+#define _INSTRUCTION_DEBUG_
 #include <assert.h>
 #include "../src/parser.h"
 
@@ -43,8 +44,11 @@ int main () {
         while (getline(file, line)) {
             // cout << line << '\n';
             std::pair<LINE_TYPE, std::smatch> match = getLineType(line);
-            if (match.first == DATAPROC_REG_OP2)
-                createDataProcRegOp2(match.second, 0, 0, q);
+            if (match.first == DATAPROC_REG_OP2) {
+                DataProc *ins = createDataProcRegOp2(match.second, 0, 0, q);
+                cout << "Hello" << ins->getInstructionString() << endl;
+                delete ins;
+            }
         }
         file.close();
     }

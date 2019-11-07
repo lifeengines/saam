@@ -30,6 +30,8 @@
  * 
  -----------------------------------------------------------------------*/
 
+#define _INSTRUCTION_DEBUG_
+
 #include <fstream>
 #include <iostream>
 #include <string>

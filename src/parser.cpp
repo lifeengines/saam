@@ -163,7 +163,7 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
     MNEMONIC m = getMnemonicFromString(mnemonic, lineNum, q);
     if (m == NO_MATCH_MNEMONIC) return NULL;
 
-    if (updateFlag != "s" || updateFlag != "S" || updateFlag != "") {
+    if (updateFlag != "s" && updateFlag != "S" && updateFlag != "") {
         Error e = { lineNum, INVALID_TOKEN, updateFlag };
         q.addError(e);
         return NULL;
@@ -221,6 +221,7 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
     }
 
     // Return instruction
+    bool updateF = (updateFlag == "s" || updateFlag == "S");
     regOperand2 op2;
     if (sAmount == 0) {
         op2.rm = rm;
@@ -233,5 +234,5 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
         op2.shift.immValShift.shiftAmount = sAmount;
     }
     
-    return new DataProc(m, mem, c, rn, rd, op2);
+    return new DataProc(mem, m, updateF, c, rn, rd, op2);
 }
