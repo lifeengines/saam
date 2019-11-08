@@ -99,6 +99,16 @@ namespace {
         }
     }
 
+    UPDATE_REGS getUpdateFlagFromString(std::string word, uint32_t lineNum,
+                                        ErrorQueue &q) {
+        if (word != "s" && word != "S" && word != "") {
+            Error e = { lineNum, INVALID_TOKEN, word };
+            q.addError(e);
+            return NO_MATCH_UPDATE_REG;
+        }
+        return (word == "s" || word == "S") ? UPDATE_TRUE : UPDATE_FALSE;
+    }
+
     REGISTER getRegisterFromString(std::string word, uint32_t lineNum, 
                                         ErrorQueue &q) {
         try {
@@ -163,11 +173,8 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
     MNEMONIC m = getMnemonicFromString(mnemonic, lineNum, q);
     if (m == NO_MATCH_MNEMONIC) return NULL;
 
-    if (updateFlag != "s" && updateFlag != "S" && updateFlag != "") {
-        Error e = { lineNum, INVALID_TOKEN, updateFlag };
-        q.addError(e);
-        return NULL;
-    }
+    UPDATE_REGS u = getUpdateFlagFromString(updateFlag, lineNum, q);
+    if (u == NO_MATCH_UPDATE_REG) return NULL;
 
     CONDITION c = getCondFromString(cond, lineNum, q);
     if (c == NO_MATCH_COND) return NULL;
@@ -178,6 +185,8 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
     REGISTER rd = getRegisterFromString(reg_2, lineNum, q);
     if (rd == NO_MATCH_REGISTER) return NULL;
 
+    // Flexible second operand
+    // {Rm} {, shift_name (#n | REGISTER) }     where 0 < n < 32
     REGISTER rm = getRegisterFromString(reg_3, lineNum, q);
     if (rn == NO_MATCH_REGISTER) return NULL;
 
@@ -221,18 +230,19 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
     }
 
     // Return instruction
-    bool updateF = (updateFlag == "s" || updateFlag == "S");
     regOperand2 op2;
     if (sAmount == 0) {
+        op2.regOperand2Type = 0x01;
         op2.rm = rm;
-        op2.shift.regShift.shiftType = s;
+        op2.shift.regShift.type = s;
         op2.shift.regShift.shiftReg = sReg;
     }
     else {
+        op2.regOperand2Type = 0x00;
         op2.rm = rm;
-        op2.shift.immValShift.shiftType = s;
+        op2.shift.immValShift.type = s;
         op2.shift.immValShift.shiftAmount = sAmount;
     }
     
-    return new DataProc(mem, m, updateF, c, rn, rd, op2);
+    return new DataProc(mem, m, u, c, rn, rd, op2);
 }

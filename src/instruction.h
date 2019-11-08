@@ -39,11 +39,11 @@ class Instruction {
     protected:
         MNEMONIC    mnemonic;
         uint32_t    memOffset;
-        bool        updateFlag;
+        UPDATE_REGS updateFlag;
         CONDITION   cond;
 
     public:
-        Instruction( uint32_t offset, MNEMONIC m, bool s, CONDITION c);
+        Instruction( uint32_t offset, MNEMONIC m, UPDATE_REGS u, CONDITION c);
         ~Instruction();
         uint32_t getMemOffset();
         void setMemOffset(uint32_t offset);
@@ -51,13 +51,16 @@ class Instruction {
 
 struct regOperand2 {
     REGISTER rm;
+    /* 0x00 - immValShift, 0x01 - regShift */
+    uint8_t regOperand2Type;
+
     union {
         struct {
-            OPERAND2_SHIFT shiftType;
+            OPERAND2_SHIFT type;
             uint8_t shiftAmount;
         } immValShift;
         struct {
-            OPERAND2_SHIFT shiftType;
+            OPERAND2_SHIFT type;
             REGISTER shiftReg;
         } regShift;
     } shift;
@@ -72,6 +75,9 @@ class DataProc : public Instruction {
     private:
         REGISTER rn;
         REGISTER rd;
+
+    /* 0x00 - regOp, 0x01 - immOp */
+    private:
         uint8_t immOperand;
 
     private:
@@ -81,9 +87,9 @@ class DataProc : public Instruction {
         } operand2;
 
     public:
-        DataProc(uint32_t offset, MNEMONIC m, bool s, CONDITION c,
+        DataProc(uint32_t offset, MNEMONIC m, UPDATE_REGS u, CONDITION c,
         REGISTER _rn, REGISTER _rd, regOperand2 &_regOp);
-        DataProc(uint32_t offset, MNEMONIC m, bool s, CONDITION c,
+        DataProc(uint32_t offset, MNEMONIC m, UPDATE_REGS u, CONDITION c,
         REGISTER _rn, REGISTER _rd, immOperand2 &_immOp);
         ~DataProc();
 

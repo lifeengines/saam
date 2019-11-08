@@ -184,6 +184,12 @@ enum OPERAND2_SHIFT {
     ROR
 };
 
+enum UPDATE_REGS {
+    NO_MATCH_UPDATE_REG,
+    UPDATE_TRUE,
+    UPDATE_FALSE
+};
+
 enum CONDITION {
     NO_MATCH_COND,
     NO_COND,

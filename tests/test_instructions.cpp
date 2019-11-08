@@ -46,7 +46,7 @@ int main () {
             std::pair<LINE_TYPE, std::smatch> match = getLineType(line);
             if (match.first == DATAPROC_REG_OP2) {
                 DataProc *ins = createDataProcRegOp2(match.second, 0, 0, q);
-                cout << "Hello" << ins->getInstructionString() << endl;
+                cout << ins->getInstructionString() << endl;
                 delete ins;
             }
         }
