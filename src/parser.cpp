@@ -146,49 +146,54 @@ namespace {
     }
 }
 
-std::pair<LINE_TYPE, std::smatch> getLineType(std::string line) {
+LINE_TYPE getLineType(std::string &line, std::smatch &match) {
     std::smatch m;
-    if (std::regex_match(line, m, DATAPROC_REG_OP2_REGEX))
-        return std::make_pair(DATAPROC_REG_OP2, m);
+    if (std::regex_match(line, m, DATAPROC_REG_OP2_REGEX)) {
+        match = m;
+        return DATAPROC_REG_OP2;
+    }
 
-    else if (std::regex_match(line, m, DATAPROC_IMMVAL_OP2_REGEX))
-        return std::make_pair(DATAPROC_IMMVAL_OP2, m);
-    
-    else
-        return std::make_pair(NO_MATCH_LINE, m);
+    else if (std::regex_match(line, m, DATAPROC_IMMVAL_OP2_REGEX)) {
+        match = m;
+        return DATAPROC_IMMVAL_OP2;
+    }
+
+    else {
+        return NO_MATCH_LINE;
+    }
 }
 
-DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
+Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
                                     uint32_t lineNum, ErrorQueue &q) {
 
-    std::string mnemonic    = std::string(sm[1]);
-    std::string updateFlag  = std::string(sm[2]);
-    std::string cond        = std::string(sm[3]);
-    std::string reg_1       = std::string(sm[4]);
-    std::string reg_2       = std::string(sm[5]);
-    std::string reg_3       = std::string(sm[6]);
-    std::string shiftName   = std::string(sm[7]);
-    std::string shiftAmt    = std::string(sm[8]);
+    std::string mnemonic    = sm.str(1);
+    std::string updateFlag  = sm.str(2);
+    std::string cond        = sm.str(3);
+    std::string reg_1       = sm.str(4);
+    std::string reg_2       = sm.str(5);
+    std::string reg_3       = sm.str(6);
+    std::string shiftName   = sm.str(7);
+    std::string shiftAmt    = sm.str(8);
 
     MNEMONIC m = getMnemonicFromString(mnemonic, lineNum, q);
-    if (m == NO_MATCH_MNEMONIC) return NULL;
+    if (m == NO_MATCH_MNEMONIC) return nullptr;
 
     UPDATE_REGS u = getUpdateFlagFromString(updateFlag, lineNum, q);
-    if (u == NO_MATCH_UPDATE_REG) return NULL;
+    if (u == NO_MATCH_UPDATE_REG) return nullptr;
 
     CONDITION c = getCondFromString(cond, lineNum, q);
-    if (c == NO_MATCH_COND) return NULL;
+    if (c == NO_MATCH_COND) return nullptr;
 
     REGISTER rn = getRegisterFromString(reg_1, lineNum, q);
-    if (rn == NO_MATCH_REGISTER) return NULL;
+    if (rn == NO_MATCH_REGISTER) return nullptr;
 
     REGISTER rd = getRegisterFromString(reg_2, lineNum, q);
-    if (rd == NO_MATCH_REGISTER) return NULL;
+    if (rd == NO_MATCH_REGISTER) return nullptr;
 
     // Flexible second operand
     // {Rm} {, shift_name (#n | REGISTER) }     where 0 < n < 32
     REGISTER rm = getRegisterFromString(reg_3, lineNum, q);
-    if (rn == NO_MATCH_REGISTER) return NULL;
+    if (rn == NO_MATCH_REGISTER) return nullptr;
 
     OPERAND2_SHIFT s = getShiftFromString(shiftName, lineNum, q);
     
@@ -197,26 +202,26 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
 
     switch (s) {
         case NO_MATCH_SHIFT:
-            return NULL;
+            return nullptr;
         case NO_SHIFT:
             if (shiftAmt != "") {
                 Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
                 q.addError(e);
-                return NULL;
+                return nullptr;
             }
             break;
         default:
             if (shiftAmt == "") {
                 Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
                 q.addError(e);
-                return NULL;
+                return nullptr;
             }
             else if (shiftAmt[0] == '#') {
                 if ((stoi(shiftAmt.substr(1)) < 0) || 
                     (stoi(shiftAmt.substr(1)) > 32)) {
                     Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
                     q.addError(e);
-                    return NULL;
+                    return nullptr;
                 }
                 else {
                     sAmount = stoi(shiftAmt.substr(1));
@@ -224,7 +229,7 @@ DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem,
             }
             else {
                 sReg = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
-                if (sReg == NO_MATCH_REGISTER) return NULL;
+                if (sReg == NO_MATCH_REGISTER) return nullptr;
             } 
             break;
     }

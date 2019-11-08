@@ -44,9 +44,15 @@ class Instruction {
 
     public:
         Instruction( uint32_t offset, MNEMONIC m, UPDATE_REGS u, CONDITION c);
-        ~Instruction();
+        virtual ~Instruction();
         uint32_t getMemOffset();
         void setMemOffset(uint32_t offset);
+
+    /* INSTRUCTION DEBUG */
+    #ifdef _INSTRUCTION_DEBUG_
+    public:
+        virtual std::string printInstructionString();
+    #endif
 };
 
 struct regOperand2 {
@@ -99,7 +105,7 @@ class DataProc : public Instruction {
     /* INSTRUCTION DEBUG */
     #ifdef _INSTRUCTION_DEBUG_
     public:
-        std::string getInstructionString();
+        std::string printInstructionString();
     #endif
 };
 

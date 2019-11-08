@@ -33,27 +33,35 @@
 #include <assert.h>
 #include "../src/parser.h"
 
-using namespace std;
-
 int main () {
-    string line;
-    ifstream file ("tests/sample-snippet/data-processing.s");
+    std::string line;
+    std::ifstream file ("tests/sample-snippet/data-processing.s");
     ErrorQueue q = ErrorQueue();
+    std::vector<Instruction *> v;
 
     if (file.is_open()) {
         while (getline(file, line)) {
-            // cout << line << '\n';
-            std::pair<LINE_TYPE, std::smatch> match = getLineType(line);
-            if (match.first == DATAPROC_REG_OP2) {
-                DataProc *ins = createDataProcRegOp2(match.second, 0, 0, q);
-                cout << ins->getInstructionString() << endl;
-                delete ins;
+            std::smatch sm;
+            LINE_TYPE type = getLineType(line, sm);
+
+            if (type == DATAPROC_REG_OP2) {
+                Instruction *ins = createDataProcRegOp2(sm, 0, 0, q);
+                // std::cout << ins->printInstructionString() << std::endl;
+                v.push_back(ins);
+                // ins = NULL;
             }
         }
+
+        for (size_t i = 0; i < v.size(); i++) {
+            std::cout << v[i]->printInstructionString() << std::endl;
+            delete v[i];
+            v[i] = NULL;
+        }
+
         file.close();
     }
     else {
-        cerr << "Unable to open file\n"; 
+        std::cerr << "Unable to open file\n"; 
     }
     return 0;
 }

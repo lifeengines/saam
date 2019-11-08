@@ -5,9 +5,9 @@
 #ifndef PARSER_H_
 #define PARSER_H_
 
-std::pair<LINE_TYPE, std::smatch> getLineType(std::string line);
+LINE_TYPE getLineType(std::string &line, std::smatch &match);
 
-DataProc *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
+Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
                                     uint32_t lineNum, ErrorQueue &q);
 
 // MNEMONIC getMnemonicFromString(std::string word, uint32_t lineNum,

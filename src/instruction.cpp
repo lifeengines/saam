@@ -86,6 +86,12 @@ void Instruction::setMemOffset(uint32_t offset) {
     memOffset = offset;
 };
 
+#ifdef _INSTRUCTION_DEBUG_
+std::string Instruction::printInstructionString() {
+    return "Printing instruction from Base class..";
+};
+#endif
+
 /*=============================================================================
  * Data Processing Instruction subclass
  * Syntax: <opcode>{s}{cond} Rd, Rn {,Rm} {,<name><amount>}
@@ -114,7 +120,7 @@ DataProc::~DataProc() {};
  * DEBUGGING TOOLS
  *===========================================================================*/
 #ifdef _INSTRUCTION_DEBUG_
-std::string DataProc::getInstructionString() {
+std::string DataProc::printInstructionString() {
     if (immOperand == 0x00) {
         if (operand2.regOp.regOperand2Type == 0x00) {
             return 
@@ -130,7 +136,7 @@ std::string DataProc::getInstructionString() {
         else if (operand2.regOp.regOperand2Type == 0x01) {
             return 
                 mnemonicReverseTable[mnemonic]
-                + (updateFlag ? "s" : "")
+                + (updateFlag ? "S" : "")
                 + conditionReverseTable[cond]
                 + registerReverseTable[rn]
                 + registerReverseTable[rd]
