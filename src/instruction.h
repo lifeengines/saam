@@ -25,7 +25,7 @@
  * 
  *  File name: instruction.h
  *
- *  Description: Instruction class declarations and constants. 
+ *  Description: Instruction class and subclasses declarations and constants.
  *  See individual description for more details.
  * 
  -----------------------------------------------------------------------*/

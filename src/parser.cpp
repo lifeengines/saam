@@ -32,13 +32,11 @@
 #include "parser.h"
 
 const std::unordered_map<std::string, MNEMONIC> mnemonicTable = {
-    {"ADD"  , ADD},
-    {"AND"  , AND},
-    {"B"    , B},
-    {"LDR"  , LDR},
-    {"MOV"  , MOV},
-    {"ORR"  , ORR},
-    {"SUB"  , SUB}
+    // Data Processing Instructions
+    {"AND", AND}, {"EOR", EOR}, {"SUB", SUB}, {"RSB", RSB}, {"ADD", ADD},
+    {"ADC", ADC}, {"SBC", SBC}, {"RSC", RSC}, {"TST", TST}, {"TEQ", TEQ},
+    {"CMP", CMP}, {"CMN", CMN}, {"ORR", ORR}, {"MOV", MOV}, {"BIC", BIC},
+    {"MVN", MVN}
 };
 
 const std::unordered_map<std::string, REGISTER> registerTable = {
@@ -190,8 +188,6 @@ Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem,
     REGISTER rd = getRegisterFromString(reg_2, lineNum, q);
     if (rd == NO_MATCH_REGISTER) return nullptr;
 
-    // Flexible second operand
-    // {Rm} {, shift_name (#n | REGISTER) }     where 0 < n < 32
     REGISTER rm = getRegisterFromString(reg_3, lineNum, q);
     if (rn == NO_MATCH_REGISTER) return nullptr;
 
@@ -216,17 +212,19 @@ Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem,
                 q.addError(e);
                 return nullptr;
             }
+            // shift immval n from 1 to 31
             else if (shiftAmt[0] == '#') {
-                if ((stoi(shiftAmt.substr(1)) < 0) || 
-                    (stoi(shiftAmt.substr(1)) > 32)) {
+                uint8_t sAmtStringToInt = stoi(shiftAmt.substr(1));
+                if ((sAmtStringToInt < 0) || (sAmtStringToInt > 32)) {
                     Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
                     q.addError(e);
                     return nullptr;
                 }
                 else {
-                    sAmount = stoi(shiftAmt.substr(1));
+                    sAmount = sAmtStringToInt;
                 }
             }
+            // shift register
             else {
                 sReg = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
                 if (sReg == NO_MATCH_REGISTER) return nullptr;
@@ -251,3 +249,8 @@ Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem,
     
     return new DataProc(mem, m, u, c, rn, rd, op2);
 }
+
+// Instruction *createDataProcImmValOp2(std::smatch sm, uint32_t mem, 
+//                                     uint32_t lineNum, ErrorQueue &q) {
+
+// }

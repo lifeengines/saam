@@ -40,13 +40,9 @@
 
 std::string mnemonicReverseTable[] = {
     "NO_MATCH_MNEMONIC",
-    "ADD",
-    "AND",
-    "B",
-    "LDR",
-    "MOV",
-    "ORR",
-    "SUB"
+    // Data Processing Instructions
+    "AND", "EOR", "SUB", "RSB", "ADD", "ADC", "SBC", "RSC", "TST", 
+    "TEQ", "CMP", "CMN", "ORR", "MOV", "BIC", "MVN",
 };
 
 std::string operand2ShiftReverseTable[] = {
@@ -125,7 +121,7 @@ std::string DataProc::printInstructionString() {
         if (operand2.regOp.regOperand2Type == 0x00) {
             return 
                 mnemonicReverseTable[mnemonic]
-                + (updateFlag ? "S" : "")
+                + (updateFlag == UPDATE_TRUE ? "S" : "")
                 + conditionReverseTable[cond]
                 + registerReverseTable[rn]
                 + registerReverseTable[rd]
@@ -136,7 +132,7 @@ std::string DataProc::printInstructionString() {
         else if (operand2.regOp.regOperand2Type == 0x01) {
             return 
                 mnemonicReverseTable[mnemonic]
-                + (updateFlag ? "S" : "")
+                + (updateFlag == UPDATE_TRUE ? "S" : "")
                 + conditionReverseTable[cond]
                 + registerReverseTable[rn]
                 + registerReverseTable[rd]

@@ -166,13 +166,12 @@ enum ERROR_TYPE {
 
 enum MNEMONIC {
     NO_MATCH_MNEMONIC,
-    ADD,
-    AND,
-    B,
-    LDR,
-    MOV,
-    ORR,
-    SUB
+    // Data Processing Instructions
+    AND, EOR, SUB, RSB, ADD, ADC, SBC, RSC, TST, 
+    TEQ, CMP, CMN, ORR, MOV, BIC, MVN,
+    
+    // Branch Instructions
+    BX, B  
 };
 
 enum OPERAND2_SHIFT {

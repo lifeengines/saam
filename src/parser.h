@@ -10,17 +10,7 @@ LINE_TYPE getLineType(std::string &line, std::smatch &match);
 Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
                                     uint32_t lineNum, ErrorQueue &q);
 
-// MNEMONIC getMnemonicFromString(std::string word, uint32_t lineNum,
-//                                     ErrorQueue &q);
-// REGISTER getRegisterFromString(std::string word, uint32_t lineNum,
-//                                     ErrorQueue &q);
-// CONDITION getCondFromString(std::string word, uint32_t lineNum,
-//                                     ErrorQueue &q);
-// OPERAND2_SHIFTNAME getShiftNameFromString(std::string word, uint32_t lineNum,
-//                                     ErrorQueue &q);
-
-// Instruction *createInstr(std::string line,  uint32_t lineNum, 
-//                                             uint32_t offset, ErrorQueue &q);
-
+// Instruction *createDataProcImmValOp2(std::smatch sm, uint32_t mem, 
+//                                     uint32_t lineNum, ErrorQueue &q);
 
 #endif

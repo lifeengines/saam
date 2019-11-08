@@ -34,34 +34,54 @@
 #include "../src/parser.h"
 
 int main () {
-    std::string line;
-    std::ifstream file ("tests/sample-snippet/data-processing.s");
+    std::string in;
+    std::string out;
+    std::ifstream inputFile("tests/sample-snippet/data-processing.s");
+    std::ifstream expOutputFile("tests/tests-output/test-data-processing.txt");
+    
     ErrorQueue q = ErrorQueue();
     std::vector<Instruction *> v;
 
-    if (file.is_open()) {
-        while (getline(file, line)) {
-            std::smatch sm;
-            LINE_TYPE type = getLineType(line, sm);
+    if (!inputFile.is_open() || !expOutputFile.is_open()) {
+        std::cerr << "Unable to open tests files.\n";
+        return EXIT_FAILURE; 
+    }
 
-            if (type == DATAPROC_REG_OP2) {
+    /* Fetch instruction from test input file */
+    while (getline(inputFile, in)) {
+        std::smatch sm;
+        LINE_TYPE type = getLineType(in, sm);
+
+        switch (type) {
+            case DATAPROC_REG_OP2: {
                 Instruction *ins = createDataProcRegOp2(sm, 0, 0, q);
-                // std::cout << ins->printInstructionString() << std::endl;
-                v.push_back(ins);
-                // ins = NULL;
+                if (ins) v.push_back(ins);
+                break;
             }
-        }
 
-        for (size_t i = 0; i < v.size(); i++) {
-            std::cout << v[i]->printInstructionString() << std::endl;
-            delete v[i];
-            v[i] = NULL;
+            default:
+                break;
         }
+    }
 
-        file.close();
+    /* Compare result with expected output */
+    for (size_t i = 0; i < v.size(); i++) {
+        if (getline(expOutputFile, out)) {
+            std::string status = 
+                (v[i]->printInstructionString() == out) ? "PASS" : "FAIL";
+            std::cout << "Testing instruction '"
+                        << v[i]->printInstructionString() << "': " << status
+                        << "\n";
+        }
+        else {
+            std::cerr << "ERR: Expected output file length doesn't match\n";
+        }
+        delete v[i];
+        v[i] = NULL;
     }
-    else {
-        std::cerr << "Unable to open file\n"; 
-    }
+
+    inputFile.close();
+    expOutputFile.close();
+
     return 0;
 }
