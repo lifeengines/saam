@@ -25,7 +25,7 @@
  * 
  *  File name: error.cpp
  *
- *  Description:
+ *  Description: Function definitions for error module
  * 
  -----------------------------------------------------------------------*/
 #include "error.h"
@@ -37,7 +37,31 @@ ErrorQueue::~ErrorQueue() {};
 void ErrorQueue::printErrors() {
     while (!q.empty()) {
         Error e = q.front();
-        std::cerr << e.message << "\n";
+        switch (e.type) {
+            case INVALID_TOKEN: {
+                std::cerr << "Line " << e.line << 
+                ": ERR_INVALID_TOKEN: " << e.message << "\n";
+                break;
+            }
+            case INVALID_VALUE: {
+                std::cerr << "Line " << e.line << 
+                ": ERR_INVALID_VALUE: " << e.message << "\n";
+                break;
+            }
+            case OUT_OF_RANGE_VALUE: {
+                std::cerr << "Line " << e.line << 
+                ": ERR_OUT_OF_RANGE_VALUE: " << e.message << "\n";
+                break;
+            }
+            case INVALID_SYNTAX: {
+                std::cerr << "Line " << e.line << 
+                ": ERR_INVALID_SYNTAX: " << e.message << "\n";
+                break;
+            }
+            default: {
+                break;
+            }
+        }
         q.pop();
     }
 };
@@ -48,7 +72,7 @@ bool ErrorQueue::addError(Error &e) {
         return true;
     }
     catch (std::bad_alloc) {
-        std::cerr << "Something went wrong" << "\n";
+        std::cerr << "ERR_BAD_ALLOC: Failed to add error" << "\n";
         return false;
     }
 };

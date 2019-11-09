@@ -145,8 +145,15 @@ std::string DataProc::printInstructionString() {
         }
     } 
     else if (immOperand == 0x01) {
-        return "ERR_RETRIEVING_INSTRUCTION_STRING";
-    }
+        return 
+            mnemonicReverseTable[mnemonic]
+            + (updateFlag == UPDATE_TRUE ? "S" : "")
+            + conditionReverseTable[cond]
+            + registerReverseTable[rn]
+            + registerReverseTable[rd]
+            + std::to_string(operand2.immOp.imm)
+            + std::to_string(operand2.immOp.rotate);
+        }
     
     return "ERR_RETRIEVING_INSTRUCTION_STRING";
 };

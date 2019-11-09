@@ -73,7 +73,7 @@ const std::string REGISTER_REGEX     = "\\w{2,3}";
 const std::string REG_SHIFT_NAME     = "\\w{3}";
 const std::string REG_SHIFT_AMOUNT   = "#\\d{1,2}|\\w{2,3}";
 const std::string IMM_VAL_DEC        = "#\\d+";
-const std::string IMM_VAL_HEX        = "#0x\\d+";
+const std::string IMM_VAL_HEX        = "#0x(?:\\d|[A-F]|[a-f])+";
 const std::string COMMENT_REGEX      = "(?:;.*)*";
 
 /*=============================================================================
