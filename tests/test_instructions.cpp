@@ -37,7 +37,7 @@ int main () {
     std::string in;
     std::string out;
     std::ifstream inputFile("tests/sample-snippet/data-processing.s");
-    std::ifstream expOutputFile("tests/tests-output/test-data-processing.txt");
+    std::ifstream expOutputFile("tests/tests-output/dp-test-output.txt");
     
     ErrorQueue q = ErrorQueue();
     std::vector<Instruction *> v;
@@ -59,7 +59,14 @@ int main () {
                 break;
             }
 
+            case DATAPROC_IMMVAL_OP2: {
+                Instruction *ins = createDataProcImmValOp2(sm, 0, 0, q);
+                if (ins) v.push_back(ins);
+                break;
+            }
+
             default:
+                std::cerr << "No match\n";
                 break;
         }
     }
@@ -79,6 +86,8 @@ int main () {
         delete v[i];
         v[i] = NULL;
     }
+
+    q.printErrors();
 
     inputFile.close();
     expOutputFile.close();

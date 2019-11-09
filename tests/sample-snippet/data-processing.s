@@ -31,3 +31,6 @@ ADDSGT   r1,  r2,  r3
 ADDSLE   r1,  r2,  r3
 ADDSAL   r1,  r2,  r3
 MOV      r1,  r3,  LSR #5
+ADD      r1,  r3,  #0x00
+ADD      r1,  r3,  #0xC0000035
+MOVSEQ   r1,  r2,  #225443840

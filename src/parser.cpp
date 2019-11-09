@@ -31,6 +31,9 @@
 
 #include "parser.h"
 
+/*=============================================================================
+ * Look-up tables
+ *===========================================================================*/
 const std::unordered_map<std::string, MNEMONIC> mnemonicTable = {
     // Data Processing Instructions
     {"AND", AND}, {"EOR", EOR}, {"SUB", SUB}, {"RSB", RSB}, {"ADD", ADD},
@@ -84,6 +87,9 @@ const std::unordered_map<std::string, OPERAND2_SHIFT> shiftTable = {
     {"", NO_SHIFT}
 };
 
+/*=============================================================================
+ * Look-up table getter functions
+ *===========================================================================*/
 namespace {
     MNEMONIC getMnemonicFromString(std::string word, uint32_t lineNum, 
                                         ErrorQueue &q) {
@@ -144,6 +150,14 @@ namespace {
     }
 }
 
+/*=============================================================================
+ * Function: getLineType
+ * Parameters: std::string &line, std::smatch &match
+ * Return: enum LINE_TYPE
+ * 
+ * Description: Takes in a line in the input assembly file and returns the
+ * instruction type of the line 
+ *===========================================================================*/
 LINE_TYPE getLineType(std::string &line, std::smatch &match) {
     std::smatch m;
     if (std::regex_match(line, m, DATAPROC_REG_OP2_REGEX)) {
@@ -161,56 +175,38 @@ LINE_TYPE getLineType(std::string &line, std::smatch &match) {
     }
 }
 
-Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
-                                    uint32_t lineNum, ErrorQueue &q) {
-
-    std::string mnemonic    = sm.str(1);
-    std::string updateFlag  = sm.str(2);
-    std::string cond        = sm.str(3);
-    std::string reg_1       = sm.str(4);
-    std::string reg_2       = sm.str(5);
-    std::string reg_3       = sm.str(6);
-    std::string shiftName   = sm.str(7);
-    std::string shiftAmt    = sm.str(8);
-
-    MNEMONIC m = getMnemonicFromString(mnemonic, lineNum, q);
-    if (m == NO_MATCH_MNEMONIC) return nullptr;
-
-    UPDATE_REGS u = getUpdateFlagFromString(updateFlag, lineNum, q);
-    if (u == NO_MATCH_UPDATE_REG) return nullptr;
-
-    CONDITION c = getCondFromString(cond, lineNum, q);
-    if (c == NO_MATCH_COND) return nullptr;
-
-    REGISTER rn = getRegisterFromString(reg_1, lineNum, q);
-    if (rn == NO_MATCH_REGISTER) return nullptr;
-
-    REGISTER rd = getRegisterFromString(reg_2, lineNum, q);
-    if (rd == NO_MATCH_REGISTER) return nullptr;
-
-    REGISTER rm = getRegisterFromString(reg_3, lineNum, q);
-    if (rn == NO_MATCH_REGISTER) return nullptr;
-
-    OPERAND2_SHIFT s = getShiftFromString(shiftName, lineNum, q);
-    
-    uint8_t sAmount = 0;
-    REGISTER sReg = NO_REG;
-
-    switch (s) {
-        case NO_MATCH_SHIFT:
-            return nullptr;
+/*=============================================================================
+ * Data Proc Instruction flexible operand 2 helper function
+ *===========================================================================*/
+namespace {
+    /*=========================================================================
+     * Helper function: getShiftOp2
+     * Parameters:  uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
+     *              uint8_t &amt, REGISTER &r, ErrorQueue &q
+     * Return: bool
+     * 
+     * Description: Takes in operand shift and shift amount string and updates
+     * the passed-by-reference arguments accordingly to the flexible operand 2
+     * valShift/regShift syntax. Returns true if it's valid flexible operand 2,
+     * else returns false.
+     *========================================================================*/
+    bool getShiftOp2(uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
+                                uint8_t &amt, REGISTER &r, ErrorQueue &q) {
+        switch (s) {
         case NO_SHIFT:
             if (shiftAmt != "") {
                 Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
                 q.addError(e);
-                return nullptr;
+                return false;
             }
-            break;
-        default:
+            return true;
+        
+        default: 
+            // error case
             if (shiftAmt == "") {
                 Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
                 q.addError(e);
-                return nullptr;
+                return false;
             }
             // shift immval n from 1 to 31
             else if (shiftAmt[0] == '#') {
@@ -218,39 +214,158 @@ Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem,
                 if ((sAmtStringToInt < 0) || (sAmtStringToInt > 32)) {
                     Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
                     q.addError(e);
-                    return nullptr;
+                    return false;
                 }
-                else {
-                    sAmount = sAmtStringToInt;
-                }
+                else amt = sAmtStringToInt;
             }
             // shift register
             else {
-                sReg = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
-                if (sReg == NO_MATCH_REGISTER) return nullptr;
-            } 
-            break;
+                r = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
+                if (r == NO_MATCH_REGISTER) return false;
+            }
+            return true;
+        }
+    };
+
+    /*=========================================================================
+     * Helper function: getImmValOp2
+     * Parameters:  uint32_t lineNum, std::string immval_str, 
+     *              uint8_t &rotate, uint8_t &immval, ErrorQueue &q
+     * Return: bool
+     * 
+     * Description: Takes in immVal string and updates the passed-by-reference
+     * arguments accordingly to the flexible operand 2 constant syntax.
+     * Returns true if it's valid flexible operand 2, else false.
+     *========================================================================*/
+    bool getImmValOp2(uint32_t lineNum, std::string immval_str, 
+                            uint8_t &rotate, uint8_t &imm, ErrorQueue &q) {
+        try {
+            uint32_t valOp2;
+            if (immval_str.length() > 3 &&         /* hex */                 
+                immval_str[1] == '0' && immval_str[2] == 'x')
+                valOp2 = strtoul(immval_str.substr(1).c_str(), nullptr, 16);
+            else                                   /* dec */
+                valOp2 = strtoul(immval_str.substr(1).c_str(), nullptr, 10);
+            uint32_t rotatedVal = 0;
+
+            for (uint8_t i = 0; i < 16; i++) {
+                rotatedVal = leftRotate(valOp2, i * 2);
+                if (rotatedVal < 256) {
+                    rotate = i;
+                    imm = (uint8_t) rotatedVal;
+                    return true;
+                }
+            }
+
+            Error e = {
+                lineNum, INVALID_VALUE, 
+                "Imm value of data processing instruction is invalid."
+            };
+            q.addError(e);
+            return false;
+        } 
+        catch (...) {
+            Error e = {
+                lineNum, OUT_OF_RANGE_VALUE, 
+                "Imm value of data processing instruction is out of range."
+            };
+            q.addError(e);
+            return false;
+        }
     }
+}
+
+/*=============================================================================
+ * Data Proc Instruction
+ *===========================================================================*/
+Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem, 
+                                    uint32_t lineNum, ErrorQueue &q) {
+
+    std::string mnemonic_str    = sm.str(1);
+    std::string updateFlag_str  = sm.str(2);
+    std::string cond_str        = sm.str(3);
+    std::string reg_1_str       = sm.str(4);
+    std::string reg_2_str       = sm.str(5);
+    std::string reg_3_str       = sm.str(6);
+    std::string shiftName_str   = sm.str(7);
+    std::string shiftAmt_str    = sm.str(8);
+
+    MNEMONIC m = getMnemonicFromString(mnemonic_str, lineNum, q);
+    if (m == NO_MATCH_MNEMONIC) return nullptr;
+
+    UPDATE_REGS u = getUpdateFlagFromString(updateFlag_str, lineNum, q);
+    if (u == NO_MATCH_UPDATE_REG) return nullptr;
+
+    CONDITION c = getCondFromString(cond_str, lineNum, q);
+    if (c == NO_MATCH_COND) return nullptr;
+
+    REGISTER rn = getRegisterFromString(reg_1_str, lineNum, q);
+    if (rn == NO_MATCH_REGISTER) return nullptr;
+
+    REGISTER rd = getRegisterFromString(reg_2_str, lineNum, q);
+    if (rd == NO_MATCH_REGISTER) return nullptr;
+
+    REGISTER rm = getRegisterFromString(reg_3_str, lineNum, q);
+    if (rn == NO_MATCH_REGISTER) return nullptr;
+
+    OPERAND2_SHIFT s = getShiftFromString(shiftName_str, lineNum, q);
+    if (s == NO_MATCH_SHIFT) return nullptr;
+
+    uint8_t shiftAmt = 0;
+    REGISTER shiftReg = NO_REG;
+
+    bool shiftOp2 = getShiftOp2(lineNum, s, shiftAmt_str, shiftAmt, shiftReg, q);
+    if (!shiftOp2) return nullptr;
 
     // Return instruction
     regOperand2 op2;
-    if (sAmount == 0) {
+    if (shiftAmt == 0) {
         op2.regOperand2Type = 0x01;
         op2.rm = rm;
         op2.shift.regShift.type = s;
-        op2.shift.regShift.shiftReg = sReg;
+        op2.shift.regShift.shiftReg = shiftReg;
     }
     else {
         op2.regOperand2Type = 0x00;
         op2.rm = rm;
         op2.shift.immValShift.type = s;
-        op2.shift.immValShift.shiftAmount = sAmount;
+        op2.shift.immValShift.shiftAmount = shiftAmt;
     }
     
     return new DataProc(mem, m, u, c, rn, rd, op2);
 }
 
-// Instruction *createDataProcImmValOp2(std::smatch sm, uint32_t mem, 
-//                                     uint32_t lineNum, ErrorQueue &q) {
+Instruction *createDataProcImmValOp2(std::smatch sm, uint32_t mem, 
+                                    uint32_t lineNum, ErrorQueue &q) {
+    std::string mnemonic_str    = sm.str(1);
+    std::string updateFlag_str  = sm.str(2);
+    std::string cond_str        = sm.str(3);
+    std::string reg_1_str       = sm.str(4);
+    std::string reg_2_str       = sm.str(5);
+    std::string immval_str      = sm.str(6);
 
-// }
+    MNEMONIC m = getMnemonicFromString(mnemonic_str, lineNum, q);
+    if (m == NO_MATCH_MNEMONIC) return nullptr;
+    
+    UPDATE_REGS u = getUpdateFlagFromString(updateFlag_str, lineNum, q);
+    if (u == NO_MATCH_UPDATE_REG) return nullptr;
+
+    CONDITION c = getCondFromString(cond_str, lineNum, q);
+    if (c == NO_MATCH_COND) return nullptr;
+
+    REGISTER rn = getRegisterFromString(reg_1_str, lineNum, q);
+    if (rn == NO_MATCH_REGISTER) return nullptr;
+
+    REGISTER rd = getRegisterFromString(reg_2_str, lineNum, q);
+    if (rd == NO_MATCH_REGISTER) return nullptr;
+
+    uint8_t imm, rotate = 0;
+    bool immValOp2 = getImmValOp2(lineNum, immval_str, rotate, imm, q);
+    if (!immValOp2) return nullptr;
+
+    // Return immVal Dataproc instruction
+    immOperand2 immOp;
+    immOp.rotate = rotate; 
+    immOp.imm = imm;
+    return new DataProc(mem, m, u, c, rn, rd, immOp);
+}
