@@ -179,101 +179,100 @@ LINE_TYPE getLineType(std::string &line, std::smatch &match) {
  * Data Proc Instruction flexible operand 2 helper function
  *===========================================================================*/
 namespace {
-    /*=========================================================================
-     * Helper function: getShiftOp2
-     * Parameters:  uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
-     *              uint8_t &amt, REGISTER &r, ErrorQueue &q
-     * Return: bool
-     * 
-     * Description: Takes in operand shift and shift amount string and updates
-     * the passed-by-reference arguments accordingly to the flexible operand 2
-     * valShift/regShift syntax. Returns true if it's valid flexible operand 2,
-     * else returns false.
-     *========================================================================*/
-    bool getShiftOp2(uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
-                                uint8_t &amt, REGISTER &r, ErrorQueue &q) {
-        switch (s) {
-        case NO_SHIFT:
-            if (shiftAmt != "") {
-                Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
-                q.addError(e);
-                return false;
-            }
-            return true;
-        
-        default: 
-            // error case
-            if (shiftAmt == "") {
-                Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
-                q.addError(e);
-                return false;
-            }
-            // shift immval n from 1 to 31
-            else if (shiftAmt[0] == '#') {
-                uint8_t sAmtStringToInt = stoi(shiftAmt.substr(1));
-                if ((sAmtStringToInt < 0) || (sAmtStringToInt > 32)) {
-                    Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
-                    q.addError(e);
-                    return false;
-                }
-                else amt = sAmtStringToInt;
-            }
-            // shift register
-            else {
-                r = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
-                if (r == NO_MATCH_REGISTER) return false;
-            }
-            return true;
-        }
-    };
-
-    /*=========================================================================
-     * Helper function: getImmValOp2
-     * Parameters:  uint32_t lineNum, std::string immval_str, 
-     *              uint8_t &rotate, uint8_t &immval, ErrorQueue &q
-     * Return: bool
-     * 
-     * Description: Takes in immVal string and updates the passed-by-reference
-     * arguments accordingly to the flexible operand 2 constant syntax.
-     * Returns true if it's valid flexible operand 2, else false.
-     *========================================================================*/
-    bool getImmValOp2(uint32_t lineNum, std::string immval_str, 
-                            uint8_t &rotate, uint8_t &imm, ErrorQueue &q) {
-        try {
-            uint32_t valOp2;
-            if (immval_str.length() > 3 &&         /* hex */                 
-                immval_str[1] == '0' && immval_str[2] == 'x')
-                valOp2 = strtoul(immval_str.substr(1).c_str(), nullptr, 16);
-            else                                   /* dec */
-                valOp2 = strtoul(immval_str.substr(1).c_str(), nullptr, 10);
-            uint32_t rotatedVal = 0;
-
-            for (uint8_t i = 0; i < 16; i++) {
-                rotatedVal = leftRotate(valOp2, i * 2);
-                if (rotatedVal < 256) {
-                    rotate = i;
-                    imm = (uint8_t) rotatedVal;
-                    return true;
-                }
-            }
-
-            Error e = {
-                lineNum, INVALID_VALUE, 
-                "Imm value of data processing instruction is invalid."
-            };
-            q.addError(e);
-            return false;
-        } 
-        catch (...) {
-            Error e = {
-                lineNum, OUT_OF_RANGE_VALUE, 
-                "Imm value of data processing instruction is out of range."
-            };
+/*=============================================================================
+* Helper function: getShiftOp2
+* Parameters:  uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
+*              uint8_t &amt, REGISTER &r, ErrorQueue &q
+* Return: bool
+* 
+* Description: Takes in operand shift and shift amount string and updates
+* the passed-by-reference arguments accordingly to the flexible operand 2
+* valShift/regShift syntax. Returns true if it's valid flexible operand 2,
+* else returns false.
+*===========================================================================*/
+bool getShiftOp2(uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
+                            uint8_t &amt, REGISTER &r, ErrorQueue &q) {
+    switch (s) {
+    case NO_SHIFT:
+        if (shiftAmt != "") {
+            Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
             q.addError(e);
             return false;
         }
+        return true;
+    
+    default: 
+        // error case
+        if (shiftAmt == "") {
+            Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
+            q.addError(e);
+            return false;
+        }
+        // shift immval n from 1 to 31
+        else if (shiftAmt[0] == '#') {
+            uint8_t sAmtStringToInt = stoi(shiftAmt.substr(1));
+            if ((sAmtStringToInt < 0) || (sAmtStringToInt > 32)) {
+                Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
+                q.addError(e);
+                return false;
+            }
+            else amt = sAmtStringToInt;
+        }
+        // shift register
+        else {
+            r = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
+            if (r == NO_MATCH_REGISTER) return false;
+        }
+        return true;
     }
-}
+};
+
+/*=============================================================================
+ * Helper function: getImmValOp2
+ * Parameters:  uint32_t lineNum, std::string immval_str, 
+ *              uint8_t &rotate, uint8_t &immval, ErrorQueue &q
+ * Return: bool
+ * 
+ * Description: Takes in immVal string and updates the passed-by-reference
+ * arguments accordingly to the flexible operand 2 constant syntax.
+ * Returns true if it's valid flexible operand 2, else false.
+ *===========================================================================*/
+bool getImmValOp2(uint32_t lineNum, std::string imm_str, 
+                        uint8_t &rotate, uint8_t &imm, ErrorQueue &q) {
+    try {
+        uint32_t valOp2;
+        // hex
+        if (imm_str.length() > 3 && imm_str[1] == '0' && imm_str[2] == 'x')
+            valOp2 = strtoul(imm_str.substr(1).c_str(), nullptr, 16);
+        // dec
+        else
+            valOp2 = strtoul(imm_str.substr(1).c_str(), nullptr, 10);
+        
+        uint32_t rotatedVal = 0;
+        for (uint8_t i = 0; i < 16; i++) {
+            rotatedVal = leftRotate(valOp2, i * 2);
+            if (rotatedVal < 256) {
+                rotate = i;
+                imm = (uint8_t) rotatedVal;
+                return true;
+            }
+        }
+        Error e = {
+            lineNum, INVALID_VALUE, 
+            "Imm value of data processing instruction is invalid."
+        };
+        q.addError(e);
+        return false;
+    } 
+    catch (...) {
+        Error e = {
+            lineNum, OUT_OF_RANGE_VALUE, 
+            "Imm value of data processing instruction is out of range."
+        };
+        q.addError(e);
+        return false;
+    }
+}}
 
 /*=============================================================================
  * Data Proc Instruction

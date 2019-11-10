@@ -153,7 +153,7 @@ std::string DataProc::printInstructionString() {
             + registerReverseTable[rd]
             + std::to_string(operand2.immOp.imm)
             + std::to_string(operand2.immOp.rotate);
-        }
+    }
     
     return "ERR_RETRIEVING_INSTRUCTION_STRING";
 };
