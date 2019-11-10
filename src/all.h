@@ -79,17 +79,17 @@ const std::string COMMENT_REGEX      = "(?:;.*)*";
 /*=============================================================================
  * Data Processing Instruction 
  * ===========================
- * Register Operand 2 Regex: <opcode>{s}{cond} Rd, Rn {,Rm} {,<name><amount>}
+ * Register Operand 2 Regex: <opcode>{s}{cond} Rd {, Rn} ,Rm {,<name><amount>}
  *      + Capture group 1: Opcode
  *      + Capture group 2: Update flag
  *      + Capture group 3: Condition flag
  *      + Capture group 4: Register #1
- *      + Capture group 5: Register #2
- *      + Capture group 6: <Optional> Register #3
+ *      + Capture group 5: <Optional> Register #2 
+ *      + Capture group 6: Register #3
  *      + Capture group 7: <Optional> Shift name [ASR, LSL, LSR, ROR] 
  *      + Caputre group 8: <Optional> Shift amount [#n (0<=n<=32) | Register]
  * 
- * ImmVal Operand 2 Regex: <opcode>{s}{cond} Rd {, Rm}, {hex|dec}
+ * ImmVal Operand 2 Regex: <opcode>{s}{cond} Rd {, Rn}, {hex|dec}
  *      + Capture group 1: Opcode
  *      + Capture group 2: Update flag
  *      + Capture group 3: Condition flag
@@ -102,12 +102,12 @@ const std::regex DATAPROC_REG_OP2_REGEX(
     "("     + OPCODE_REGEX      + ")"   +
     "("     + UPDATE_FLAG       + ")"   +
     "("     + COND_REGEX        + ")"   + SPACE +
-    "("     + REGISTER_REGEX    + ")"   + SPACE + "," + SPACE +
     "("     + REGISTER_REGEX    + ")"   + SPACE +
-    "(?:,"  + SPACE             + "("   + REGISTER_REGEX      
+    "(?:,"  + SPACE             + "("   + REGISTER_REGEX    
             + ")){0,1}"         + SPACE +
-    "(?:,"  + SPACE             + "("           + REG_SHIFT_NAME   + ")"
-            + SPACE             + "("           + REG_SHIFT_AMOUNT + ")){0,1}"
+    "(?:,"  + SPACE             + "("   + REGISTER_REGEX    + ")"   
+            + SPACE             + "(?:("+ REG_SHIFT_NAME    + ")"
+            + SPACE             + "("   + REG_SHIFT_AMOUNT  + ")){0,1})"
             + SPACE             + COMMENT_REGEX);
 
 const std::regex DATAPROC_IMMVAL_OP2_REGEX(
@@ -116,7 +116,8 @@ const std::regex DATAPROC_IMMVAL_OP2_REGEX(
     "("     + COND_REGEX        + ")"   + SPACE +
     "("     + REGISTER_REGEX    + ")"   + SPACE +
     "(?:,"  + SPACE             + "("   + REGISTER_REGEX    
-            + ")){0,1}"         + SPACE + "," + SPACE +
+            + ")){0,1}"         + SPACE 
+            + ","               + SPACE +
     "("     + IMM_VAL_HEX       + "|"   + IMM_VAL_DEC + ")"
             + SPACE             + COMMENT_REGEX);
 

@@ -58,6 +58,11 @@ void ErrorQueue::printErrors() {
                 ": ERR_INVALID_SYNTAX: " << e.message << "\n";
                 break;
             }
+            case ILL_FORMAT_INSTRUCTION: {
+                std::cerr << "Line " << e.line << 
+                ": ILL_FORMAT_INSTRUCTION: " << e.message << "\n";
+                break;
+            }
             default: {
                 break;
             }

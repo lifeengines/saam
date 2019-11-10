@@ -10,14 +10,14 @@ Supported instructions
 ===============================================================================
 TODOs
 =====
-( ) Instruction subclasses
-( ) Flexible operand 2 Regex
-    ( ) op2 = #constant (8 bits)
-    ( ) op2 = Rm{, shift}
-( ) Single operand instructions (MOV, MVN) <opcode>{cond}{S} Rd,<Op2>
-( ) CMP,CMN,TEQ,TST 
-( ) 2-operands instructions <opcode>{cond}{S} Rd,Rn,<Op2>
-( ) Unit tests data processing instructions
+(x) Instruction subclasses
+(x) Flexible operand 2 Regex
+    (x) op2 = #constant (8 bits)
+    (x) op2 = Rm{, shift}
+(x) Single operand instructions (MOV, MVN) <opcode>{cond}{S} Rd,<Op2>
+(x) CMP,CMN,TEQ,TST 
+(x) 2-operands instructions <opcode>{cond}{S} Rd,Rn,<Op2>
+(x) Unit tests data processing instructions
 
 ( ) AREA DATA directive
 

@@ -180,52 +180,107 @@ LINE_TYPE getLineType(std::string &line, std::smatch &match) {
  *===========================================================================*/
 namespace {
 /*=============================================================================
-* Helper function: getShiftOp2
-* Parameters:  uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
-*              uint8_t &amt, REGISTER &r, ErrorQueue &q
-* Return: bool
-* 
-* Description: Takes in operand shift and shift amount string and updates
-* the passed-by-reference arguments accordingly to the flexible operand 2
-* valShift/regShift syntax. Returns true if it's valid flexible operand 2,
-* else returns false.
-*===========================================================================*/
-bool getShiftOp2(uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
-                            uint8_t &amt, REGISTER &r, ErrorQueue &q) {
-    switch (s) {
-    case NO_SHIFT:
-        if (shiftAmt != "") {
-            Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
-            q.addError(e);
-            return false;
-        }
-        return true;
-    
-    default: 
-        // error case
-        if (shiftAmt == "") {
-            Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
-            q.addError(e);
-            return false;
-        }
-        // shift immval n from 1 to 31
-        else if (shiftAmt[0] == '#') {
-            uint8_t sAmtStringToInt = stoi(shiftAmt.substr(1));
-            if ((sAmtStringToInt < 0) || (sAmtStringToInt > 32)) {
-                Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
+ * Helper function: validNumDataProcOperands
+ * Parameters:  uint32_t lineNum, MNEMONIC m, UPDATE_REGS u, 
+                REGISTER rn, REGISTER rd, ErrorQueue &q
+ * Return: bool
+ * 
+ * Description: Check the following syntax invariants of data proc instructions.
+ *      + MOV, MVN instructions take only Rn
+ *      + CMP,CMN,TEQ,TST instructions take only Rd. No "s" flag is allowed
+ *      + Others take both Rn and Rd
+ * Returns true if the syntax is valid, else false
+ *===========================================================================*/
+    bool validNumDataProcOperands(uint32_t lineNum, MNEMONIC m, UPDATE_REGS u, 
+                                    REGISTER rn, REGISTER rd, ErrorQueue &q) {
+        if (m == MOV || m == MVN) {
+            if (rn != NO_REG && rd != NO_REG) {
+                Error e = {
+                    lineNum, ILL_FORMAT_INSTRUCTION,
+                    "Specified instruction only accepts one register Rd."
+                };
                 q.addError(e);
                 return false;
             }
-            else amt = sAmtStringToInt;
         }
-        // shift register
+        else if (m == CMP || m == CMN || m == TEQ || m == TST) {
+            if (rn != NO_REG && rd != NO_REG) {
+                Error e = {
+                    lineNum, ILL_FORMAT_INSTRUCTION,
+                    "Specified instruction only accepts one register Rn."
+                };
+                q.addError(e);
+                return false;
+            }
+            if (u != UPDATE_FALSE) {
+                Error e = {
+                    lineNum, ILL_FORMAT_INSTRUCTION,
+                    "Specified instruction does not accept 's' update flag."
+                };
+                q.addError(e);
+                return false;
+            }
+        }
         else {
-            r = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
-            if (r == NO_MATCH_REGISTER) return false;
+            if (rn == NO_REG && rd == NO_REG) {
+                Error e = {
+                    lineNum, ILL_FORMAT_INSTRUCTION,
+                    "Specified instruction requires 2 registers Rn and Rd."
+                };
+                q.addError(e);
+                return false;
+            }
         }
         return true;
     }
-};
+
+/*=============================================================================
+ * Helper function: getShiftOp2
+ * Parameters:  uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
+ *              uint8_t &amt, REGISTER &r, ErrorQueue &q
+ * Return: bool
+ * 
+ * Description: Takes in operand shift and shift amount string and updates
+ * the passed-by-reference arguments accordingly to the flexible operand 2
+ * valShift/regShift syntax. Returns true if it's valid flexible operand 2,
+ * else returns false.
+ *===========================================================================*/
+    bool getShiftOp2(uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
+                                uint8_t &amt, REGISTER &r, ErrorQueue &q) {
+        switch (s) {
+        case NO_SHIFT: {
+            if (shiftAmt != "") {
+                Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
+                q.addError(e);
+                return false;
+            }
+            return true;
+        }
+        default: {
+            // error case
+            if (shiftAmt == "") {
+                Error e = { lineNum, INVALID_SYNTAX, shiftAmt };
+                q.addError(e);
+                return false;
+            }
+            // shift immval n from 1 to 31
+            else if (shiftAmt[0] == '#') {
+                uint8_t sAmtStringToInt = stoi(shiftAmt.substr(1));
+                if ((sAmtStringToInt < 0) || (sAmtStringToInt > 32)) {
+                    Error e = { lineNum, OUT_OF_RANGE_VALUE, shiftAmt };
+                    q.addError(e);
+                    return false;
+                }
+                else amt = sAmtStringToInt;
+            }
+            // shift register
+            else {
+                r = getRegisterFromString(shiftAmt.substr(1), lineNum, q);
+                if (r == NO_MATCH_REGISTER) return false;
+            }
+            return true;
+        }}
+    };
 
 /*=============================================================================
  * Helper function: getImmValOp2
@@ -237,42 +292,46 @@ bool getShiftOp2(uint32_t lineNum, OPERAND2_SHIFT s, std::string shiftAmt,
  * arguments accordingly to the flexible operand 2 constant syntax.
  * Returns true if it's valid flexible operand 2, else false.
  *===========================================================================*/
-bool getImmValOp2(uint32_t lineNum, std::string imm_str, 
-                        uint8_t &rotate, uint8_t &imm, ErrorQueue &q) {
-    try {
-        uint32_t valOp2;
-        // hex
-        if (imm_str.length() > 3 && imm_str[1] == '0' && imm_str[2] == 'x')
-            valOp2 = strtoul(imm_str.substr(1).c_str(), nullptr, 16);
-        // dec
-        else
-            valOp2 = strtoul(imm_str.substr(1).c_str(), nullptr, 10);
-        
-        uint32_t rotatedVal = 0;
-        for (uint8_t i = 0; i < 16; i++) {
-            rotatedVal = leftRotate(valOp2, i * 2);
-            if (rotatedVal < 256) {
-                rotate = i;
-                imm = (uint8_t) rotatedVal;
-                return true;
+    bool getImmValOp2(uint32_t lineNum, std::string imm_str, 
+                            uint8_t &rotate, uint8_t &imm, ErrorQueue &q) {
+        try {
+            uint32_t valOp2;
+            // hex string to uint32_t conversion
+            if (imm_str.length() > 3 && imm_str[1] == '0' && imm_str[2] == 'x') {
+                valOp2 = strtoul(imm_str.substr(1).c_str(), nullptr, 16);
             }
+            // dec string to uint32_t conversion
+            else {
+                valOp2 = strtoul(imm_str.substr(1).c_str(), nullptr, 10);
+            }   
+            // Find 8-bit rotate and imm-value from op2 constant
+            uint32_t rotatedVal = 0;
+            for (uint8_t i = 0; i < 16; i++) {
+                rotatedVal = leftRotate(valOp2, i * 2);
+                if (rotatedVal < 256) {
+                    rotate = i;
+                    imm = (uint8_t) rotatedVal;
+                    return true;
+                }
+            }
+            // Add error when op2 constant is invalid
+            Error e = {
+                lineNum, INVALID_VALUE, 
+                "Imm value of data processing instruction is invalid."
+            };
+            q.addError(e);
+            return false;
+        } 
+        catch (...) {
+            Error e = {
+                lineNum, OUT_OF_RANGE_VALUE, 
+                "Imm value of data processing instruction is out of range."
+            };
+            q.addError(e);
+            return false;
         }
-        Error e = {
-            lineNum, INVALID_VALUE, 
-            "Imm value of data processing instruction is invalid."
-        };
-        q.addError(e);
-        return false;
-    } 
-    catch (...) {
-        Error e = {
-            lineNum, OUT_OF_RANGE_VALUE, 
-            "Imm value of data processing instruction is out of range."
-        };
-        q.addError(e);
-        return false;
     }
-}}
+}
 
 /*=============================================================================
  * Data Proc Instruction
@@ -306,6 +365,8 @@ Instruction *createDataProcRegOp2(std::smatch sm, uint32_t mem,
 
     REGISTER rm = getRegisterFromString(reg_3_str, lineNum, q);
     if (rn == NO_MATCH_REGISTER) return nullptr;
+
+    if (!validNumDataProcOperands(lineNum, m, u, rn, rd, q)) return nullptr;
 
     OPERAND2_SHIFT s = getShiftFromString(shiftName_str, lineNum, q);
     if (s == NO_MATCH_SHIFT) return nullptr;
@@ -357,6 +418,8 @@ Instruction *createDataProcImmValOp2(std::smatch sm, uint32_t mem,
 
     REGISTER rd = getRegisterFromString(reg_2_str, lineNum, q);
     if (rd == NO_MATCH_REGISTER) return nullptr;
+
+    if (!validNumDataProcOperands(lineNum, m, u, rn, rd, q)) return nullptr;
 
     uint8_t imm, rotate = 0;
     bool immValOp2 = getImmValOp2(lineNum, immval_str, rotate, imm, q);
